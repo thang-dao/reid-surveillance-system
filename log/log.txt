@@ -1,0 +1,2 @@
+2020-03-16 15:17:22,553 person-reid-tiny-baseline INFO: Running with config:
+baseline
