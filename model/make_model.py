@@ -1,8 +1,9 @@
+import sys
+sys.path.append('./')
 import torch
 import torch.nn as nn
 from .backbones.resnet import ResNet, BasicBlock, Bottleneck
 from loss.arcface import ArcFace
-
 
 def weights_init_kaiming(m):
     classname = m.__class__.__name__
@@ -48,7 +49,7 @@ class Backbone(nn.Module):
         if pretrain_choice == 'imagenet':
             self.base.load_param(model_path)
             print('Loading pretrained ImageNet model......')
-
+        self.local_conv_out_channels = 128
         self.gap = nn.AdaptiveAvgPool2d(1)
         self.num_classes = num_classes
 
@@ -59,24 +60,33 @@ class Backbone(nn.Module):
             self.classifier = nn.Linear(self.in_planes, self.num_classes, bias=False)
             self.classifier.apply(weights_init_classifier)
 
+        self.local_conv = nn.Conv2d(self.in_planes, self.local_conv_out_channels, 1)
+        self.local_bn = nn.BatchNorm2d(self.local_conv_out_channels)
+        self.local_relu = nn.ReLU(inplace=True)
         self.bottleneck = nn.BatchNorm1d(self.in_planes)
         self.bottleneck.bias.requires_grad_(False)
         self.bottleneck.apply(weights_init_kaiming)
 
-    def forward(self, x, label=None):  # label is unused if self.cos_layer == 'no'
+    def forward(self, x, label=None):
+      # label is unused if self.cos_layer == 'no'
         x = self.base(x)
+        # import pdb; pdb.set_trace()
         global_feat = nn.functional.avg_pool2d(x, x.shape[2:4])
         global_feat = global_feat.view(global_feat.shape[0], -1)  # flatten to (bs, 2048)
         feat = self.bottleneck(global_feat)
+        
+        local_feat = torch.mean(x, -1, keepdim=True)
+        local_feat = self.local_relu(self.local_bn(self.local_conv(local_feat)))
+        local_feat = local_feat.squeeze(-1).permute(0, 2, 1)
 
         if self.training:
             if self.cos_layer:
                 cls_score = self.arcface(feat, label)
             else:
                 cls_score = self.classifier(feat)
-            return cls_score, global_feat  # global feature for triplet loss
+            return cls_score, global_feat, local_feat  # global feature for triplet loss
         else:
-            return feat
+            return feat, local_feat
 
     def load_param(self, trained_path):
         param_dict = torch.load(trained_path)
@@ -90,3 +100,10 @@ class Backbone(nn.Module):
 def make_model(cfg, num_class):
     model = Backbone(num_class, cfg)
     return model
+
+if __name__ == "__main__":
+    from config import Config
+    config = Config()
+    model = make_model(cfg=config, num_class=715)
+    inputs = torch.randn((1, 3, 65, 75))
+    print(model(inputs).shape) 

@@ -3,7 +3,7 @@ import torch.nn.functional as F
 from .softmax_loss import CrossEntropyLabelSmooth
 from .center_loss import CenterLoss
 from .triplet_loss import TripletLoss
-
+from .local_loss import LocalLoss
 
 def make_loss(cfg, num_classes):    # modified by gu
     feat_dim = 2048
@@ -17,7 +17,10 @@ def make_loss(cfg, num_classes):    # modified by gu
             xent = CrossEntropyLabelSmooth(num_classes=num_classes)  # new add by luo
             print("label smooth on, numclasses:", num_classes)
 
-    def loss_func(score, feat, target):
+    if 'local' in cfg.LOSS_TYPE:
+        local_loss = LocalLoss(cfg.MARGIN, cfg.HARD_FACTOR)
+
+    def loss_func(score, feat, local_feat, target):
         if cfg.LOSS_TYPE == 'triplet+softmax+center':
             #print('Train with center loss, the loss type is triplet+center_loss')
             if cfg.LOSS_LABELSMOOTH == 'on':
@@ -44,6 +47,16 @@ def make_loss(cfg, num_classes):    # modified by gu
             else:
                 return cfg.CE_LOSS_WEIGHT * F.cross_entropy(score, target) + \
                        cfg.TRIPLET_LOSS_WEIGHT * triplet(feat, target)[0]
+        elif cfg.LOSS_TYPE == "softmax+triplet+local":
+            if cfg.LOSS_LABELSMOOTH == 'on':
+                return cfg.CE_LOSS_WEIGHT * xent(score, target) + \
+                       cfg.TRIPLET_LOSS_WEIGHT * triplet(feat, target)[0] + \
+                       cfg.LOCAL_LOSS_WEIGHT * local_loss(local_feat, target)[0], \
+                       cfg.CE_LOSS_WEIGHT * xent(score, target), \
+                       cfg.TRIPLET_LOSS_WEIGHT * triplet(feat, target)[0], \
+                       cfg.LOCAL_LOSS_WEIGHT * local_loss(local_feat, target)[0]
+                       
+
         elif cfg.LOSS_TYPE == 'softmax':
             if cfg.LOSS_LABELSMOOTH == 'on':
                 return xent(score, target)

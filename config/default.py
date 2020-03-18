@@ -14,9 +14,9 @@ class DefaultConfig:
         self.OUTPUT_DIR = "./output"  # saved model directory
         self.DEVICE_ID = "0"  # GPU IDs, i.e. "0,1,2" for multiple GPUs
 
-        self.LOG_PERIOD = 50  # iteration of displaying training log
-        self.CHECKPOINT_PERIOD = 5  # saving model period
-        self.EVAL_PERIOD = 5  # validation period
+        self.LOG_PERIOD = 10  # iteration of displaying training log
+        self.CHECKPOINT_PERIOD = 10  # saving model period
+        self.EVAL_PERIOD = 40  # validation period
         self.MAX_EPOCHS = 200  # max training epochs
 
         # data
@@ -45,7 +45,7 @@ class DefaultConfig:
         self.CE_LOSS_WEIGHT = 1.0  # weight of softmax loss
         self.TRIPLET_LOSS_WEIGHT = 1.0  # weight of triplet loss
         self.CENTER_LOSS_WEIGHT = 0.0005  # weight of center loss
-
+        self.LOCAL_LOSS_WEIGHT = 1
         self.HARD_FACTOR = 0.0 # harder example mining
 
         self.WEIGHT_DECAY = 0.0005

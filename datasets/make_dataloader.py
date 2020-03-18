@@ -28,7 +28,8 @@ def make_dataloader(cfg):
         T.Resize(cfg.INPUT_SIZE),
         T.RandomHorizontalFlip(p=0.5),
         T.Pad(10),
-        T.RandomCrop([256, 128]),
+        # T.RandomCrop([256, 128]),
+        T.RandomCrop(cfg.INPUT_SIZE),
         # T.RandomRotation(12, resample=Image.BICUBIC, expand=False, center=None),
         # T.RandomApply([T.ColorJitter(brightness=0.4, contrast=0.4, saturation=0.3, hue=0),
         #                T.RandomAffine(degrees=0, translate=None, scale=[0.8, 1.2], shear=15, \

@@ -25,16 +25,17 @@ class Config(DefaultConfig):
     def __init__(self):
         super(Config, self).__init__()
         self.CFG_NAME = 'baseline'
-        self.DATA_DIR = '../datasets/market1501/Market-1501-v15.09.15'
+        self.DATA_DIR = '/home/vietthang/dataset/Market-1501-v15.09.15'
         self.PRETRAIN_CHOICE = 'imagenet'
         self.PRETRAIN_PATH = './pretrained/resnet50-19c8e357.pth'
+        self.BATCH_SIZE = 64
 
-        self.LOSS_TYPE = 'triplet+softmax+center'
+        self.LOSS_TYPE = 'softmax+triplet+local'
         self.TEST_WEIGHT = './output/resnet50_185.pth'
         self.FLIP_FEATS = 'off'
         self.HARD_FACTOR = 0.2
-        self.RERANKING = True
-
+        self.RERANKING = False
+        self.INPUT_SIZE = [224, 224]
 
 # class Config(DefaultConfig):
 #     def __init__(self):
