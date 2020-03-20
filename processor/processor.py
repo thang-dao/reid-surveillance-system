@@ -41,6 +41,7 @@ def do_train(cfg,
     loss_id = AverageMeter()
     loss_global = AverageMeter()
     loss_local = AverageMeter()
+    loss_center = AverageMeter()
     evaluator = R1_mAP(num_query, max_rank=50, feat_norm=cfg.FEAT_NORM)
     # train
     for epoch in range(1, epochs + 1):
@@ -49,6 +50,7 @@ def do_train(cfg,
         loss_id.reset()
         loss_global.reset()
         loss_local.reset()
+        loss_center.reset()
         acc_meter.reset()
         evaluator.reset()
         scheduler.step()
@@ -61,7 +63,7 @@ def do_train(cfg,
             
             score, feat, local_feat = model(img, target)
 
-            loss, _loss_id, _loss_global, _loss_local = loss_fn(score, feat, local_feat, target)
+            loss, _loss_id, _loss_global, _loss_local, _loss_center = loss_fn(score, feat, local_feat, target)
 
             loss.backward()
             optimizer.step()
@@ -75,14 +77,16 @@ def do_train(cfg,
             loss_id.update(_loss_id.item(), img.shape[0])
             loss_global.update(_loss_global.item(), img.shape[0])
             loss_local.update(_loss_local.item(), img.shape[0])
+            loss_center.update(_loss_center.item(), img.shape[0])
             acc_meter.update(acc, 1)
 
             if (n_iter + 1) % log_period == 0:
-                logger.info("Epoch[{}] Iteration[{}/{}] Loss: {:.3f}, LossID: {:.3f}, LossGlobal: {:.3f}, LossLocal: {:.3f}, Acc: {:.3f}, Base Lr: {:.2e}"
+                logger.info("Epoch[{}] Iteration[{}/{}] Loss: {:.3f}, LossID: {:.3f}, LossGlobal: {:.3f}, LossLocal: {:.3f}, LossCenter: {:.3f}, Acc: {:.3f}, Base Lr: {:.2e}"
                             .format(epoch, (n_iter + 1), len(train_loader),
-                                    loss_meter.avg, loss_id.avg, loss_global.avg, loss_local.avg, acc_meter.avg, scheduler.get_lr()[0]))
+                                    loss_meter.avg, loss_id.avg, loss_global.avg, loss_local.avg, loss_center.avg, acc_meter.avg, scheduler.get_lr()[0]))
                 if writer is not None:
                     writer.add_scalar('Train/Loss_g', loss_global.avg, n_iter+1)
+                    writer.add_scalar('Train/Loss_g', loss_center.avg, n_iter+1)
                     writer.add_scalar('Train/Loss_l', loss_local.avg, n_iter+1)
                     writer.add_scalar('Train/Loss_x', loss_id.avg, n_iter+1)
                     writer.add_scalar('Train/Loss', loss_meter.avg, n_iter+1)

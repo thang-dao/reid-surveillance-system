@@ -19,23 +19,28 @@ from .default import DefaultConfig
 
 class Config(DefaultConfig):
     """
-    mAP 86.2, Rank1 94.4, @epoch 185
+    Config use softmaxt, triplet, local loss, center and no Harder exemple mining in Local loss
+    Local loss: Separate image into 16 part after resnet50 model use last stride
+    mAP , Rank1 , @epoch 85
     """
 
     def __init__(self):
         super(Config, self).__init__()
-        self.CFG_NAME = 'baseline'
-        self.DATA_DIR = '/home/vietthang/dataset/Market-1501-v15.09.15'
+        self.CFG_NAME = 'softmax_triplet_local_center_256_128'
+        self.DATA_DIR = '/home/vietthang/reid/datasets/Market-1501-v15.09.15'
+        self.LOG_DIR = './log/softmax_triplet_local_center'
+        self.OUTPUT_DIR = './output/softmax_triplet_local_center'
         self.PRETRAIN_CHOICE = 'imagenet'
         self.PRETRAIN_PATH = './pretrained/resnet50-19c8e357.pth'
-        self.BATCH_SIZE = 64
+        self.BATCH_SIZE = 128
 
-        self.LOSS_TYPE = 'softmax+triplet+local'
+        self.LOSS_TYPE = 'softmax+triplet+local+center'
         self.TEST_WEIGHT = './output/resnet50_185.pth'
         self.FLIP_FEATS = 'off'
         self.HARD_FACTOR = 0.2
         self.RERANKING = False
-        self.INPUT_SIZE = [224, 224]
+        self.INPUT_SIZE = [256, 128]
+
 
 # class Config(DefaultConfig):
 #     def __init__(self):

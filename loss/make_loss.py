@@ -55,7 +55,16 @@ def make_loss(cfg, num_classes):    # modified by gu
                        cfg.CE_LOSS_WEIGHT * xent(score, target), \
                        cfg.TRIPLET_LOSS_WEIGHT * triplet(feat, target)[0], \
                        cfg.LOCAL_LOSS_WEIGHT * local_loss(local_feat, target)[0]
-                       
+        elif cfg.LOSS_TYPE == "softmax+triplet+local+center":
+            if cfg.LOSS_LABELSMOOTH == 'on':
+                return cfg.CE_LOSS_WEIGHT * xent(score, target) + \
+                       cfg.TRIPLET_LOSS_WEIGHT * triplet(feat, target)[0] + \
+                       cfg.LOCAL_LOSS_WEIGHT * local_loss(local_feat, target)[0] + \
+                       cfg.CENTER_LOSS_WEIGHT * center_criterion(feat, target), \
+                       cfg.CE_LOSS_WEIGHT * xent(score, target), \
+                       cfg.TRIPLET_LOSS_WEIGHT * triplet(feat, target)[0], \
+                       cfg.LOCAL_LOSS_WEIGHT * local_loss(local_feat, target)[0], \
+                       cfg.CENTER_LOSS_WEIGHT * center_criterion(feat, target)
 
         elif cfg.LOSS_TYPE == 'softmax':
             if cfg.LOSS_LABELSMOOTH == 'on':

@@ -284,8 +284,8 @@ class LocalLoss(object):
       local_feat = normalize(local_feat, axis=-1)
     dist_mat = local_dist(local_feat, local_feat)
     dist_ap, dist_an = hard_example_mining(dist_mat, label, return_inds=False)
-    dist_ap *= (1.0 + self.hard_factor)
-    dist_an *= (1.0 - self.hard_factor)
+    # dist_ap *= (1.0 + self.hard_factor)
+    # dist_an *= (1.0 - self.hard_factor)
     y = dist_an.new().resize_as_(dist_an).fill_(1)
     if self.margin is not None:
         loss = self.ranking_loss(dist_an, dist_ap, y)
