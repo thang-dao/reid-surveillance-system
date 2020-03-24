@@ -9,11 +9,11 @@ class DefaultConfig:
     """
 
     def __init__(self):
-        self.PROJECT_NAME = 'person-reid-tiny-baseline'  # project name
+        self.PROJECT_NAME = 'person-reid-surveillance-system-baseline'  # project name
         self.LOG_DIR = "./log"  # log directory
         self.OUTPUT_DIR = "./output"  # saved model directory
-        self.DEVICE_ID = "0"  # GPU IDs, i.e. "0,1,2" for multiple GPUs
-
+        self.DEVICE_ID = "cuda:0"  # GPU IDs, i.e. "0,1,2" for multiple GPUs
+        self.TEST_DISTANCE = 'global'
         self.LOG_PERIOD = 10  # iteration of displaying training log
         self.CHECKPOINT_PERIOD = 10  # saving model period
         self.EVAL_PERIOD = 40  # validation period

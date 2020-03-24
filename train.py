@@ -1,7 +1,7 @@
 import os
 from torch.backends import cudnn
 
-from config import Config
+from config import Config, Config1, Config2, Config3, Config4, Config5, Config6, Config7, Config8, Config9
 from utils.logger import setup_logger
 from datasets import make_dataloader
 from model import make_model
@@ -10,7 +10,7 @@ from loss import make_loss
 from processor import do_train
 
 if __name__ == '__main__':
-    cfg = Config()
+    cfg = Config9()
     if not os.path.exists(cfg.LOG_DIR):
         os.mkdir(cfg.LOG_DIR)
     logger = setup_logger('{}'.format(cfg.PROJECT_NAME), cfg.LOG_DIR)

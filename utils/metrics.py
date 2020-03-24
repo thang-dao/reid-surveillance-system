@@ -2,7 +2,7 @@ import torch
 import numpy as np
 
 from utils.reranking import re_ranking
-
+from utils.distance import low_memory_local_dist
 
 def euclidean_distance(qf, gf):
     m = qf.shape[0]
@@ -87,38 +87,46 @@ def eval_func(distmat, q_pids, g_pids, q_camids, g_camids, max_rank=50):
 
 
 class R1_mAP():
-    def __init__(self, num_query, max_rank=50, feat_norm=True, method='euclidean', reranking=False):
+    def __init__(self, num_query, max_rank=50, feat_norm=True, method='euclidean', reranking=False, test_distance='global'):
         super(R1_mAP, self).__init__()
         self.num_query = num_query
         self.max_rank = max_rank
         self.feat_norm = feat_norm
         self.method = method
         self.reranking=reranking
+        self.test_distance = test_distance
 
     def reset(self):
         self.feats = []
         self.pids = []
         self.camids = []
+        self.lf = []
 
     def update(self, output):  # called once for each batch
-        feat, pid, camid = output
+        feat, lf, pid, camid = output
         self.feats.append(feat)
+        self.lf.append(lf)
         self.pids.extend(np.asarray(pid))
         self.camids.extend(np.asarray(camid))
 
     def compute(self):  # called after each epoch
         feats = torch.cat(self.feats, dim=0)
+        lfs = torch.cat(self.lf, dim=0)
         if self.feat_norm:
             print("The test feature is normalized")
             feats = torch.nn.functional.normalize(feats, dim=1, p=2)  # along channel
+            lfs = torch.nn.functional.normalize(lfs, dim=1, p=2)
         # query
         qf = feats[:self.num_query]
+        qlf = lfs[:self.num_query]
         q_pids = np.asarray(self.pids[:self.num_query])
         q_camids = np.asarray(self.camids[:self.num_query])
         # gallery
         gf = feats[self.num_query:]
+        glf = lfs[self.num_query:]
         g_pids = np.asarray(self.pids[self.num_query:])
         g_camids = np.asarray(self.camids[self.num_query:])
+
         if self.reranking:
             print('=> Enter reranking')
             # distmat = re_ranking(qf, gf, k1=20, k2=6, lambda_value=0.3)
@@ -128,9 +136,15 @@ class R1_mAP():
             if self.method == 'euclidean':
                 print('=> Computing DistMat with euclidean distance')
                 distmat = euclidean_distance(qf, gf)
+                
             elif self.method == 'cosine':
                 print('=> Computing DistMat with cosine similarity')
                 distmat = cosine_similarity(qf, gf)
+        if self.test_distance == 'global_local':
+            qlf = qlf.permute(0,2,1)
+            glf = glf.permute(0,2,1)
+            local_distmat = low_memory_local_dist(qlf.numpy(),glf.numpy())
+            distmat = local_distmat + distmat
         cmc, mAP = eval_func(distmat, q_pids, g_pids, q_camids, g_camids)
 
         return cmc, mAP, distmat, self.pids, self.camids, qf, gf

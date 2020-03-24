@@ -1,7 +1,7 @@
 import os
 from torch.backends import cudnn
 
-from config import Config
+from config import Config9
 from datasets import make_dataloader
 from model import make_model
 from processor import do_inference
@@ -9,7 +9,7 @@ from utils.logger import setup_logger
 
 
 if __name__ == "__main__":
-    cfg = Config()
+    cfg = Config9()
     log_dir = cfg.LOG_DIR
     logger = setup_logger('{}.test'.format(cfg.PROJECT_NAME), log_dir)
     os.environ['CUDA_VISIBLE_DEVICES'] = cfg.DEVICE_ID

@@ -23,7 +23,9 @@ def do_train(cfg,
     checkpoint_period = cfg.CHECKPOINT_PERIOD
     eval_period = cfg.EVAL_PERIOD
 
-    device = "cuda:0"
+    # device = torch.cuda.current_device()
+    # device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    device = "cuda"
     epochs = cfg.MAX_EPOCHS
 
     writer = SummaryWriter(log_dir=cfg.LOG_DIR)
@@ -35,6 +37,7 @@ def do_train(cfg,
     #         print('Using {} GPUs for training'.format(torch.cuda.device_count()))
     #         model = nn.DataParallel(model)
     #     model.to(device)
+    # model.to(cfg.DEVICE_ID)
     model.to(device)
     loss_meter = AverageMeter()
     acc_meter = AverageMeter()
@@ -59,37 +62,97 @@ def do_train(cfg,
             img = img.to(device)
             target = vid.to(device)
             
-            score, feat, local_feat = model(img, target)
+            if cfg.LOSS_TYPE == 'aligned':
+                score, feat, local_feat = model(img, target)
+                loss, _loss_global, _loss_local = loss_fn(score, feat, local_feat, target)
+                loss.backward()
+                optimizer.step()
+                acc = (score.max(1)[1] == target).float().mean()
+                loss_meter.update(loss.item(), img.shape[0])
+                loss_global.update(_loss_global.item(), img.shape[0])
+                loss_local.update(_loss_local.item(), img.shape[0])
+                acc_meter.update(acc, 1)
+                if (n_iter + 1) % log_period == 0:
+                        logger.info("Epoch[{}] Iteration[{}/{}] Loss: {:.3f}, LossGlobal: {:.3f}, LossLocal: {:.3f},  Acc: {:.3f}, Base Lr: {:.2e}"
+                                .format(epoch, (n_iter + 1), len(train_loader),
+                                        loss_meter.avg, loss_global.avg, loss_local.avg, acc_meter.avg, scheduler.get_lr()[0]))
+            elif cfg.LOSS_TYPE == 'aligned+pcb':
+                score, feat, local_feat, y = model(img, target)
+                loss, _loss_id, _loss_global, _loss_local, preds = loss_fn(score, feat, local_feat, target, y)
+                loss.backward()
+                optimizer.step()
+                acc = (score.max(1)[1] == target).float().mean()
+                loss_meter.update(loss.item(), img.shape[0])
+                loss_id.update(_loss_id.item(), img.shape[0])
+                loss_global.update(_loss_global.item(), img.shape[0])
+                loss_local.update(_loss_local.item(), img.shape[0])
+                acc_meter.update(acc, 1)
+                if (n_iter + 1) % log_period == 0:
+                        logger.info("Epoch[{}] Iteration[{}/{}] Loss: {:.3f}, LossID: {:.3f}, LossGlobal: {:.3f}, LossLocal: {:.3f},  Acc: {:.3f}, Base Lr: {:.2e}"
+                                .format(epoch, (n_iter + 1), len(train_loader),
+                                        loss_meter.avg, loss_id.avg, loss_global.avg, loss_local.avg, acc_meter.avg, scheduler.get_lr()[0]))
 
-            loss, _loss_id, _loss_global, _loss_local = loss_fn(score, feat, local_feat, target)
+            if cfg.LOSS_TYPE == 'pcb+triplet':
+                score, feat, local_feat, y = model(img, target)
+                loss,  _loss_id, _loss_global, preds = loss_fn(score, feat, local_feat, y, target)
+                loss.backward()
+                optimizer.step()
+                acc = (score.max(1)[1] == target).float().mean()
+                loss_meter.update(loss.item(), img.shape[0])
+                loss_id.update(_loss_id.item(), img.shape[0])
+                loss_global.update(_loss_global.item(), img.shape[0])
+                acc_meter.update(acc, 1)
+                if (n_iter + 1) % log_period == 0:
+                        logger.info("Epoch[{}] Iteration[{}/{}] Loss: {:.3f}, LossID: {:.3f}, LossGlobal: {:.3f}, Acc: {:.3f}, Base Lr: {:.2e}"
+                                .format(epoch, (n_iter + 1), len(train_loader),
+                                        loss_meter.avg,  loss_id.avg, loss_global.avg, acc_meter.avg, scheduler.get_lr()[0]))
+            elif cfg.LOSS_TYPE == 'pcb':
+                score, feat, local_feat, y = model(img, target)
+                loss, preds = loss_fn(score, feat, local_feat, y, target)
+                loss.backward()
+                optimizer.step()
+                acc = (score.max(1)[1] == target).float().mean()
+                loss_meter.update(loss.item(), img.shape[0])
+                acc_meter.update(acc, 1)
+                if (n_iter + 1) % log_period == 0:
+                        logger.info("Epoch[{}] Iteration[{}/{}] Loss: {:.3f} Acc: {:.3f}, Base Lr: {:.2e}"
+                                .format(epoch, (n_iter + 1), len(train_loader),
+                                        loss_meter.avg, acc_meter.avg, scheduler.get_lr()[0]))
 
-            loss.backward()
-            optimizer.step()
-            if 'center' in cfg.LOSS_TYPE:
-                for param in center_criterion.parameters():
-                    param.grad.data *= (1. / cfg.CENTER_LOSS_WEIGHT)
-                optimizer_center.step()
+            elif cfg.LOSS_TYPE == 'pcb+triplet+local':
+                loss, _loss_id, _loss_global, _loss_local, preds = loss_fn(score, feat, local_feat, y, target)
+                loss.backward()
+                optimizer.step()
+                if 'center' in cfg.LOSS_TYPE:
+                    for param in center_criterion.parameters():
+                        param.grad.data *= (1. / cfg.CENTER_LOSS_WEIGHT)
+                    optimizer_center.step()
 
-            acc = (score.max(1)[1] == target).float().mean()
-            loss_meter.update(loss.item(), img.shape[0])
-            loss_id.update(_loss_id.item(), img.shape[0])
-            loss_global.update(_loss_global.item(), img.shape[0])
-            loss_local.update(_loss_local.item(), img.shape[0])
-            acc_meter.update(acc, 1)
+                # acc = (score.max(1)[1] == target).float().mean()
+                acc = (preds == target).float().mean()
+                loss_meter.update(loss.item(), img.shape[0])
+                loss_id.update(_loss_id.item(), img.shape[0])
+                loss_global.update(_loss_global.item(), img.shape[0])
+                loss_local.update(_loss_local.item(), img.shape[0])
+                acc_meter.update(acc, 1)
 
-            if (n_iter + 1) % log_period == 0:
-                logger.info("Epoch[{}] Iteration[{}/{}] Loss: {:.3f}, LossID: {:.3f}, LossGlobal: {:.3f}, LossLocal: {:.3f}, Acc: {:.3f}, Base Lr: {:.2e}"
-                            .format(epoch, (n_iter + 1), len(train_loader),
-                                    loss_meter.avg, loss_id.avg, loss_global.avg, loss_local.avg, acc_meter.avg, scheduler.get_lr()[0]))
-                if writer is not None:
-                    writer.add_scalar('Train/Loss_g', loss_global.avg, n_iter+1)
-                    writer.add_scalar('Train/Loss_l', loss_local.avg, n_iter+1)
-                    writer.add_scalar('Train/Loss_x', loss_id.avg, n_iter+1)
-                    writer.add_scalar('Train/Loss', loss_meter.avg, n_iter+1)
-                    writer.add_scalar('Train/Acc', acc_meter.avg, n_iter+1)
-                    writer.add_scalar(
-                        'Train/Lr', scheduler.get_lr()[0], n_iter+1
-                    )
+                if (n_iter + 1) % log_period == 0:
+                    logger.info("Epoch[{}] Iteration[{}/{}] Loss: {:.3f}, LossID: {:.3f}, LossGlobal: {:.3f}, LossLocal: {:.3f}, Acc: {:.3f}, Base Lr: {:.2e}"
+                                .format(epoch, (n_iter + 1), len(train_loader),
+                                        loss_meter.avg, loss_id.avg, loss_global.avg, loss_local.avg, acc_meter.avg, scheduler.get_lr()[0]))
+            # if (n_iter + 1) % log_period == 0:
+            #     logger.info("Epoch[{}] Iteration[{}/{}] Loss: {:.3f}, LossID: {:.3f}, LossGlobal: {:.3f}, Acc: {:.3f}, Base Lr: {:.2e}"
+            #                 .format(epoch, (n_iter + 1), len(train_loader),
+            #                         loss_meter.avg, loss_id.avg, loss_global.avg, acc_meter.avg, scheduler.get_lr()[0]))                                    
+            if writer is not None:
+                writer.add_scalar('Train/Loss_g', loss_global.avg, n_iter+1)
+                writer.add_scalar('Train/Loss_l', loss_local.avg, n_iter+1)
+                writer.add_scalar('Train/Loss_x', loss_id.avg, n_iter+1)
+                writer.add_scalar('Train/Loss', loss_meter.avg, n_iter+1)
+                writer.add_scalar('Train/Acc', acc_meter.avg, n_iter+1)
+                writer.add_scalar(
+                    'Train/Lr', scheduler.get_lr()[0], n_iter+1
+                )
         end_time = time.time()
         time_per_batch = (end_time - start_time) / (n_iter + 1)
         logger.info("Epoch {} done. Time per batch: {:.3f}[s] Speed: {:.1f}[samples/s]"
@@ -106,8 +169,8 @@ def do_train(cfg,
             for n_iter, (img, vid, camid, _) in enumerate(val_loader):
                 with torch.no_grad():
                     img = img.to(device)
-                    feat = model(img)[0]
-                    evaluator.update((feat, vid, camid))
+                    feat, lf = model(img)
+                    evaluator.update((feat, lf, vid, camid))
 
             cmc, mAP, _, _, _, _, _ = evaluator.compute()
             logger.info("Validation Results - Epoch: {}".format(epoch))
@@ -124,7 +187,7 @@ def do_inference(cfg,
     logger = logging.getLogger('{}.test'.format(cfg.PROJECT_NAME))
     logger.info("Enter inferencing")
     evaluator = R1_mAP(num_query, max_rank=50, feat_norm=cfg.FEAT_NORM, \
-                       method=cfg.TEST_METHOD, reranking=cfg.RERANKING)
+                       method=cfg.TEST_METHOD, reranking=cfg.RERANKING, test_distance=cfg.TEST_DISTANCE)
     evaluator.reset()
     if device:
         if torch.cuda.device_count() > 1:
@@ -147,9 +210,9 @@ def do_inference(cfg,
                     f = model(img)[0]
                     feat = feat + f
             else:
-                feat = model(img)
+                feat, lf = model(img)
 
-            evaluator.update((feat, pid, camid))
+            evaluator.update((feat, lf, pid, camid))
             img_path_list.extend(imgpath)
 
     cmc, mAP, distmat, pids, camids, qfeats, gfeats = evaluator.compute()
