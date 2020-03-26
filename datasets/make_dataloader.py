@@ -7,8 +7,12 @@ from .Market1501 import Market1501
 from .bases import ImageDataset
 from .preprocessing import RandomErasing
 from .sampler import RandomIdentitySampler
+from .dukemtmcreid import DukeMTMCreID
 
-
+# __image_datasets = {
+#     'market1501': Market1501(),
+#     'dukemtmcreid': DukeMTMCreID()
+# }
 def train_collate_fn(batch):
     """
     # collate_fn这个函数的输入就是一个list，list的长度是一个batch size，list中的每个元素都是__getitem__得到的结果
@@ -46,9 +50,14 @@ def make_dataloader(cfg):
     ])
 
     num_workers = cfg.DATALOADER_NUM_WORKERS
-    dataset = Market1501(data_dir=cfg.DATA_DIR, verbose=True)
+    # dataset = Market1501(data_dir=cfg.DATA_DIR, verbose=True)
+    # dataset = __image_datasets[cfg.DATA_NAME]
+    if cfg.DATA_NAME == 'market1501':
+        dataset = Market1501()
+    elif cfg.DATA_NAME == 'dukemtmcreid':
+        dataset = DukeMTMCreID()
     num_classes = dataset.num_train_pids
-
+    
     train_set = ImageDataset(dataset.train, train_transforms)
 
     if cfg.SAMPLER == 'triplet':

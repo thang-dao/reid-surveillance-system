@@ -21,6 +21,7 @@ class DefaultConfig:
 
         # data
         self.DATA_DIR = "/home/lujj/datasets/Market-1501-v15.09.15/"  # dataset path
+        self.DATA_NAME = 'market1501'
         self.DATALOADER_NUM_WORKERS = 8  # number of dataloader workers
         self.SAMPLER = 'triplet'  # batch sampler, option: 'triplet','softmax'
         self.BATCH_SIZE = 1  # MxN, M: number of persons, N: number of images of per person

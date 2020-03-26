@@ -198,7 +198,7 @@ class Backbone(nn.Module):
                 local_feat = local_feat / torch.pow(local_feat,2).sum(dim=1, keepdim=True).clamp(min=1e-12).sqrt()
                 return global_feat, local_feat
 
-        elif self.loss_type == 'aligned+pcb':
+        elif 'aligned' in self.loss_type:
             global_feat = nn.functional.avg_pool2d(x, x.size()[2:])
             global_feat = global_feat.view(global_feat.size(0), -1)
             v_g = self.parts_avgpool(x) 
@@ -211,7 +211,7 @@ class Backbone(nn.Module):
                 y_i = self.classifiers[i](v_h_i)
                 y.append(y_i)
             if self.training:
-                local_feat = nn.functional.max_pool2d(input=d_feat,kernel_size= (1, d_feat.size()[3]))
+                local_feat = nn.functional.max_pool2d(input=d_feat,kernel_size= (1, d_feat.size()[3])).cuda()
                 local_feat = self.local_relu(self.local_bn(self.local_conv(local_feat)))
                 preds = self.classifier(global_feat)
                 return preds, global_feat, local_feat, y

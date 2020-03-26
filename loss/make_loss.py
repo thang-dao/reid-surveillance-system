@@ -137,7 +137,26 @@ def make_loss(cfg, num_classes):    # modified by gu
                    cfg.TRIPLET_LOSS_WEIGHT * global_loss, \
                    cfg.LOCAL_LOSS_WEIGHT * local_loss, \
                    preds
-
+        elif cfg.LOSS_TYPE == 'aligned+pcb+center':
+            global_loss, local_loss = aligned_loss(feat, target, local_feat)
+            if cfg.LOSS_LABELSMOOTH == 'on':
+                sm = nn.Softmax(dim=1)
+                loss = 0.
+                score = 0
+                for x in pcb_f:
+                    loss += pcb(x, target)
+                    score += sm(x)
+                _, preds = torch.max(score.data, 1)
+                loss /= len(pcb_f)
+            return cfg.CE_LOSS_WEIGHT * loss + \
+                   cfg.TRIPLET_LOSS_WEIGHT * global_loss + \
+                   cfg.LOCAL_LOSS_WEIGHT * local_loss + \
+                   cfg.CENTER_LOSS_WEIGHT * center_criterion(feat, target), \
+                   cfg.CE_LOSS_WEIGHT * loss, \
+                   cfg.TRIPLET_LOSS_WEIGHT * global_loss, \
+                   cfg.LOCAL_LOSS_WEIGHT * local_loss, \
+                   cfg.CENTER_LOSS_WEIGHT * center_criterion(feat, target), \
+                   preds
         elif cfg.LOSS_TYPE == 'softmax':
             if cfg.LOSS_LABELSMOOTH == 'on':
                 return xent(score, target)
