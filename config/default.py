@@ -17,6 +17,7 @@ class DefaultConfig:
         self.LOG_PERIOD = 10  # iteration of displaying training log
         self.CHECKPOINT_PERIOD = 10  # saving model period
         self.EVAL_PERIOD = 40  # validation period
+        self.EVAL_METRIC = 'market1501'
         self.MAX_EPOCHS = 200  # max training epochs
 
         # data
@@ -42,6 +43,7 @@ class DefaultConfig:
         # solver
         self.OPTIMIZER = 'Adam'  # optimizer
         self.BASE_LR = 0.00035  # base learning rate
+        self.CLASSIFIER_LR = 0.02
 
         self.CE_LOSS_WEIGHT = 1.0  # weight of softmax loss
         self.TRIPLET_LOSS_WEIGHT = 1.0  # weight of triplet loss

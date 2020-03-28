@@ -8,6 +8,7 @@ from .bases import ImageDataset
 from .preprocessing import RandomErasing
 from .sampler import RandomIdentitySampler
 from .dukemtmcreid import DukeMTMCreID
+from .cuhk03 import CUHK03
 
 # __image_datasets = {
 #     'market1501': Market1501(),
@@ -56,6 +57,8 @@ def make_dataloader(cfg):
         dataset = Market1501()
     elif cfg.DATA_NAME == 'dukemtmcreid':
         dataset = DukeMTMCreID()
+    elif cfg.DATA_NAME == 'cuhk03':
+        dataset = CUHK03()
     num_classes = dataset.num_train_pids
     
     train_set = ImageDataset(dataset.train, train_transforms)

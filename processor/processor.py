@@ -45,7 +45,7 @@ def do_train(cfg,
     loss_global = AverageMeter()
     loss_local = AverageMeter()
     loss_center = AverageMeter()
-    evaluator = R1_mAP(num_query, max_rank=50, feat_norm=cfg.FEAT_NORM)
+    evaluator = R1_mAP(num_query, max_rank=50, feat_norm=cfg.FEAT_NORM, metrics=cfg.EVAL_METRIC)
     # train
     for epoch in range(1, epochs + 1):
         start_time = time.time()
@@ -205,12 +205,12 @@ def do_train(cfg,
 def do_inference(cfg,
                  model,
                  val_loader,
-                 num_query):
+                 num_query, epoch):
     device = "cuda"
     logger = logging.getLogger('{}.test'.format(cfg.PROJECT_NAME))
     logger.info("Enter inferencing")
     evaluator = R1_mAP(num_query, max_rank=50, feat_norm=cfg.FEAT_NORM, \
-                       method=cfg.TEST_METHOD, reranking=cfg.RERANKING, test_distance=cfg.TEST_DISTANCE)
+                       method=cfg.TEST_METHOD, reranking=cfg.RERANKING, test_distance=cfg.TEST_DISTANCE, metrics=cfg.EVAL_METRIC)
     evaluator.reset()
     if device:
         if torch.cuda.device_count() > 1:
@@ -239,7 +239,12 @@ def do_inference(cfg,
             img_path_list.extend(imgpath)
 
     cmc, mAP, distmat, pids, camids, qfeats, gfeats = evaluator.compute()
-
+    with open(os.path.join(cfg.LOG_DIR, 'LOG_TEST.txt'), "a+") as f:
+        f.write("Epoch: {}".format(epoch))
+        f.write("   mAP: {:.1%}".format(mAP))
+        for r in [1, 5, 10]:
+            f.write(" CMC curve, Rank-{:<3}:{:.1%}".format(r, cmc[r - 1]))
+        f.write('\n')
     np.save(os.path.join(cfg.LOG_DIR, cfg.DIST_MAT) , distmat)
     np.save(os.path.join(cfg.LOG_DIR, cfg.PIDS), pids)
     np.save(os.path.join(cfg.LOG_DIR, cfg.CAMIDS), camids)

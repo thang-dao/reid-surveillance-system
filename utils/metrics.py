@@ -1,6 +1,9 @@
 import torch
 import numpy as np
-
+try:
+    from _collections import defaultdict
+except ImportError:
+    pass
 from utils.reranking import re_ranking
 from utils.distance import low_memory_local_dist
 
@@ -60,6 +63,81 @@ def cosine_similarity(qf, gf):
     dist_mat = np.arccos(dist_mat)
     return dist_mat
 
+def eval_cuhk03(distmat, q_pids, g_pids, q_camids, g_camids, max_rank=50):
+    """Evaluation with cuhk03 metric
+    Key: one image for each gallery identity is randomly sampled for each query identity.
+    Random sampling is performed num_repeats times.
+    """
+    num_repeats = 10
+    num_q, num_g = distmat.shape
+
+    if num_g < max_rank:
+        max_rank = num_g
+        print(
+            'Note: number of gallery samples is quite small, got {}'.
+            format(num_g)
+        )
+
+    indices = np.argsort(distmat, axis=1)
+    matches = (g_pids[indices] == q_pids[:, np.newaxis]).astype(np.int32)
+
+    # compute cmc curve for each query
+    all_cmc = []
+    all_AP = []
+    num_valid_q = 0. # number of valid query
+
+    for q_idx in range(num_q):
+        # get query pid and camid
+        q_pid = q_pids[q_idx]
+        q_camid = q_camids[q_idx]
+
+        # remove gallery samples that have the same pid and camid with query
+        order = indices[q_idx]
+        remove = (g_pids[order] == q_pid) & (g_camids[order] == q_camid)
+        keep = np.invert(remove)
+
+        # compute cmc curve
+        raw_cmc = matches[q_idx][
+            keep] # binary vector, positions with value 1 are correct matches
+        if not np.any(raw_cmc):
+            # this condition is true when query identity does not appear in gallery
+            continue
+
+        kept_g_pids = g_pids[order][keep]
+        g_pids_dict = defaultdict(list)
+        for idx, pid in enumerate(kept_g_pids):
+            g_pids_dict[pid].append(idx)
+
+        cmc = 0.
+        for repeat_idx in range(num_repeats):
+            mask = np.zeros(len(raw_cmc), dtype=np.bool)
+            for _, idxs in g_pids_dict.items():
+                # randomly sample one image for each gallery person
+                rnd_idx = np.random.choice(idxs)
+                mask[rnd_idx] = True
+            masked_raw_cmc = raw_cmc[mask]
+            _cmc = masked_raw_cmc.cumsum()
+            _cmc[_cmc > 1] = 1
+            cmc += _cmc[:max_rank].astype(np.float32)
+
+        cmc /= num_repeats
+        all_cmc.append(cmc)
+        # compute AP
+        num_rel = raw_cmc.sum()
+        tmp_cmc = raw_cmc.cumsum()
+        tmp_cmc = [x / (i+1.) for i, x in enumerate(tmp_cmc)]
+        tmp_cmc = np.asarray(tmp_cmc) * raw_cmc
+        AP = tmp_cmc.sum() / num_rel
+        all_AP.append(AP)
+        num_valid_q += 1.
+
+    assert num_valid_q > 0, 'Error: all query identities do not appear in gallery'
+
+    all_cmc = np.asarray(all_cmc).astype(np.float32)
+    all_cmc = all_cmc.sum(0) / num_valid_q
+    mAP = np.mean(all_AP)
+
+    return all_cmc, mAP
 
 def eval_func(distmat, q_pids, g_pids, q_camids, g_camids, max_rank=50):
     """Evaluation with market1501 metric
@@ -122,7 +200,7 @@ def eval_func(distmat, q_pids, g_pids, q_camids, g_camids, max_rank=50):
 
 
 class R1_mAP():
-    def __init__(self, num_query, max_rank=50, feat_norm=True, method='euclidean', reranking=False, test_distance='global'):
+    def __init__(self, num_query, max_rank=50, feat_norm=True, method='euclidean', reranking=False, test_distance='global', metrics='market1501'):
         super(R1_mAP, self).__init__()
         self.num_query = num_query
         self.max_rank = max_rank
@@ -130,6 +208,7 @@ class R1_mAP():
         self.method = method
         self.reranking=reranking
         self.test_distance = test_distance
+        self.metrics = metrics
 
     def reset(self):
         self.feats = []
@@ -164,9 +243,16 @@ class R1_mAP():
 
         if self.reranking:
             print('=> Enter reranking')
+            local_qq_distmat = low_memory_local_dist(qlf.numpy(), qlf.numpy())
+            local_gg_distmat = low_memory_local_dist(glf.numpy(), glf.numpy())
+            local_dist = np.concatenate(
+                [np.concatenate([local_qq_distmat, local_distmat], axis=1),
+                 np.concatenate([local_distmat.T, local_gg_distmat], axis=1)],
+                axis=0)
             # distmat = re_ranking(qf, gf, k1=20, k2=6, lambda_value=0.3)
             distmat = re_ranking(qf, gf, k1=30, k2=10, lambda_value=0.2)
-
+            print("Using global and local branches for reranking")
+            distmat = re_ranking(qf,gf,k1=20,k2=6,lambda_value=0.3,local_distmat=local_dist,only_local=False)
         else:
             if self.method == 'euclidean':
                 print('=> Computing DistMat with euclidean distance')
@@ -175,11 +261,14 @@ class R1_mAP():
             elif self.method == 'cosine':
                 print('=> Computing DistMat with cosine similarity')
                 distmat = cosine_similarity(qf, gf)
-        if self.test_distance == 'global_local':
+        if self.test_distance == 'global_local' and not self.reranking:
             qlf = qlf.permute(0,2,1)
             glf = glf.permute(0,2,1)
             local_distmat = low_memory_local_dist(qlf.numpy(),glf.numpy())
             distmat = local_distmat + distmat
-        cmc, mAP = eval_func(distmat, q_pids, g_pids, q_camids, g_camids)
+        if self.metrics == 'cuhk03':
+            cmc, mAP = eval_cuhk03(distmat, q_pids, g_pids, q_camids, g_camids)
+        else:
+            cmc, mAP = eval_func(distmat, q_pids, g_pids, q_camids, g_camids)
 
         return cmc, mAP, distmat, self.pids, self.camids, qf, gf

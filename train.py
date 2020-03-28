@@ -1,16 +1,16 @@
 import os
 from torch.backends import cudnn
 
-from config import Config, Config1, Config2, Config3, Config4, Config5, Config6, Config7, Config8, Config9, Config10, Config11, Config12
+from config import Config8, Config9, Config10, Config11, Config12, Config13, Config14
 from utils.logger import setup_logger
 from datasets import make_dataloader
 from model import make_model
-from solver import make_optimizer, WarmupMultiStepLR
+from solver import make_optimizer, WarmupMultiStepLR, adapt_make_optimizer
 from loss import make_loss
 from processor import do_train
 
 if __name__ == '__main__':
-    cfg = Config11()
+    cfg = Config14()
     if not os.path.exists(cfg.LOG_DIR):
         os.mkdir(cfg.LOG_DIR)
     logger = setup_logger('{}'.format(cfg.PROJECT_NAME), cfg.LOG_DIR)
@@ -26,6 +26,8 @@ if __name__ == '__main__':
     loss_func, center_criterion = make_loss(cfg, num_classes=num_classes)
 
     optimizer, optimizer_center = make_optimizer(cfg, model, center_criterion)
+    # optimizer, optimizer_center = adapt_make_optimizer(cfg, model, center_criterion)
+    # import pdb; pdb.set_trace()
     scheduler = WarmupMultiStepLR(optimizer, cfg.STEPS, cfg.GAMMA,
                                   cfg.WARMUP_FACTOR,
                                   cfg.WARMUP_EPOCHS, cfg.WARMUP_METHOD)

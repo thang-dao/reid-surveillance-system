@@ -291,9 +291,9 @@ class Config10(DefaultConfig):
         self.PRETRAIN_CHOICE = 'imagenet'
         self.PRETRAIN_PATH = './pretrained/resnet50-19c8e357.pth'
         self.BATCH_SIZE = 128
-        self.CHECKPOINT_PERIOD = 5
+        self.CHECKPOINT_PERIOD = 1
         self.LOSS_TYPE = 'aligned+pcb+center'
-        self.TEST_WEIGHT = './output/aligned_pcb_center/resnet50_75.pth'
+        self.TEST_WEIGHT = './output/aligned_pcb_center/resnet50_80.pth'
         self.LAST_STRIDE = 1
         self.FLIP_FEATS = 'off'
         self.HARD_FACTOR = 0.2
@@ -357,6 +357,133 @@ class Config12(DefaultConfig):
         self.CHECKPOINT_PERIOD = 5
         self.LOSS_TYPE = 'aligned+pcb'
         self.TEST_WEIGHT = './output/aligned_pcb_DukeMTMCREID/resnet50_80.pth'
+        self.LAST_STRIDE = 1
+        self.FLIP_FEATS = 'off'
+        self.HARD_FACTOR = 0.2
+        self.RERANKING = False
+        self.INPUT_SIZE = [256, 128]
+        self.TEST_DISTANCE = 'global_local'
+        self.TEST_METHOD = 'euclidean'
+
+#CUHK03
+class Config13(DefaultConfig):
+    """
+    Config for aligned algorithm: global+local, 
+    No last stride then downsample 
+    Test:
+    Global Distance + Local Distance: mAP: 73.7%, Rank1:85.1%  Rank5:93.0%, Rank10: 94.9%, @epoch:80
+    """
+
+    def __init__(self):
+        super(Config13, self).__init__()
+        self.CFG_NAME = 'Aligned algorithm combine PCB'
+        self.MODEL_NAME = 'resnet50'
+        self.DATA_NAME = 'cuhk03'
+        # self.DATA_DIR = '/home/vietthang/dataset/Market-1501-v15.09.15'
+        self.LOG_DIR = './log/aligned_pcb_CUHK03'
+        self.OUTPUT_DIR = './output/aligned_pcb_CUHK03'
+        self.PRETRAIN_CHOICE = 'imagenet'
+        self.PRETRAIN_PATH = './pretrained/resnet50-19c8e357.pth'
+        self.EVAL_METRIC = 'cuhk03'
+        self.BATCH_SIZE = 128
+        self.CHECKPOINT_PERIOD = 5
+        self.EVAL_PERIOD = 20
+        self.LOSS_TYPE = 'aligned+pcb'
+        self.TEST_WEIGHT = './output/aligned_pcb_CUHK03/resnet50_150.pth'
+        self.LAST_STRIDE = 1
+        self.FLIP_FEATS = 'off'
+        self.HARD_FACTOR = 0.2
+        self.RERANKING = False
+        self.INPUT_SIZE = [256, 128]
+        self.TEST_DISTANCE = 'global_local'
+        self.TEST_METHOD = 'euclidean'
+
+class Config14(DefaultConfig):
+    """
+    Config for aligned algorithm: global+local, 
+    No last stride then downsample 
+    Test:
+    Global Distance + Local Distance: 
+    """
+
+    def __init__(self):
+        super(Config14, self).__init__()
+        self.CFG_NAME = 'Aligned algorithm combine PCB and Center'
+        self.MODEL_NAME = 'resnet50'
+        self.DATA_NAME = 'cuhk03'
+        # self.DATA_DIR = '/home/vietthang/dataset/Market-1501-v15.09.15'
+        self.LOG_DIR = './log/aligned_pcb_center_CUHK03'
+        self.OUTPUT_DIR = './output/aligned_pcb_center_CUHK03'
+        self.PRETRAIN_CHOICE = 'imagenet'
+        self.PRETRAIN_PATH = './pretrained/resnet50-19c8e357.pth'
+        self.EVAL_METRIC = 'cuhk03'
+        self.BATCH_SIZE = 128
+        self.CHECKPOINT_PERIOD = 5
+        self.EVAL_PERIOD = 20
+        self.LOSS_TYPE = 'aligned+pcb+center'
+        self.TEST_WEIGHT = './output/aligned_pcb_center_CUHK03/resnet50_80.pth'
+        self.LAST_STRIDE = 1
+        self.FLIP_FEATS = 'off'
+        self.HARD_FACTOR = 0.2
+        self.RERANKING = True
+        self.INPUT_SIZE = [256, 128]
+        self.TEST_IMS_PER_BATCH = 32
+        self.TEST_DISTANCE = 'global_local'
+        self.TEST_METHOD = 'euclidean'
+
+class Config_9_1(DefaultConfig):
+    """
+    Config for aligned algorithm combine PCB: global+local, 
+    No last stride then downsample 
+    Test:
+    Global Distance: mAP:79.2% , Rank1:91.2%  Rank5:96.5%, Rank10: 97.9%, @epoch:200
+    Global Distance + Local Distance: mAP:80.6% , Rank1:91.5%  Rank5:97.1%, Rank10: 98.1%, @epoch:200
+    """
+
+    def __init__(self):
+        super(Config_9_1, self).__init__()
+        self.CFG_NAME = 'Aligned algorithm combine PCB with adapt optimizer'
+        self.MODEL_NAME = 'resnet50'
+        self.DATA_DIR = '/home/vietthang/dataset/Market-1501-v15.09.15'
+        self.LOG_DIR = './log/aligned_pcb_adapt_optimizer'
+        self.OUTPUT_DIR = './output/aligned_pcb_adapt_optimizer'
+        self.PRETRAIN_CHOICE = 'imagenet'
+        self.PRETRAIN_PATH = './pretrained/resnet50-19c8e357.pth'
+        self.BATCH_SIZE = 128
+        self.CHECKPOINT_PERIOD = 5
+        self.LOSS_TYPE = 'aligned+pcb'
+        self.TEST_WEIGHT = './output/aligned_pcb_adapt_optimizer/resnet50_175.pth'
+        self.LAST_STRIDE = 1
+        self.FLIP_FEATS = 'off'
+        self.HARD_FACTOR = 0.2
+        self.RERANKING = False
+        self.INPUT_SIZE = [256, 128]
+        self.TEST_DISTANCE = 'global_local'
+        self.TEST_METHOD = 'euclidean'
+
+class Config_9_2(DefaultConfig):
+    """
+    Config for aligned algorithm combine PCB: global+local, 
+    No last stride then downsample 
+    Test:
+    Global Distance: mAP:79.2% , Rank1:91.2%  Rank5:96.5%, Rank10: 97.9%, @epoch:200
+    Global Distance + Local Distance: mAP:80.6% , Rank1:91.5%  Rank5:97.1%, Rank10: 98.1%, @epoch:200
+    """
+
+    def __init__(self):
+        super(Config_9_2, self).__init__()
+        self.CFG_NAME = 'Aligned algorithm combine PCB with adapt optimizer SGD'
+        self.MODEL_NAME = 'resnet50'
+        self.DATA_DIR = '/home/vietthang/dataset/Market-1501-v15.09.15'
+        self.LOG_DIR = './log/aligned_pcb_adapt_optimizer_SGD'
+        self.OUTPUT_DIR = './output/aligned_pcb_adapt_optimizer_SGD'
+        self.PRETRAIN_CHOICE = 'imagenet'
+        self.PRETRAIN_PATH = './pretrained/resnet50-19c8e357.pth'
+        self.BATCH_SIZE = 128
+        self.CHECKPOINT_PERIOD = 5
+        self.OPTIMIZER = 'SGD'
+        self.LOSS_TYPE = 'aligned+pcb'
+        self.TEST_WEIGHT = './output/aligned_pcb_adapt_optimizer_SGD/resnet50_175.pth'
         self.LAST_STRIDE = 1
         self.FLIP_FEATS = 'off'
         self.HARD_FACTOR = 0.2
