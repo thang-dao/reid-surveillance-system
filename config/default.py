@@ -65,6 +65,7 @@ class DefaultConfig:
         self.WARMUP_METHOD = "linear"  # option: 'linear','constant'
 
         # test
+        self.TEST_MULTIPLE = False
         self.TEST_IMS_PER_BATCH = 128
         self.FEAT_NORM = "yes"
         self.TEST_WEIGHT = './output/resnet50_175.pth'

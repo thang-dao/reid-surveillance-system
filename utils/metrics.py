@@ -241,31 +241,44 @@ class R1_mAP():
         g_pids = np.asarray(self.pids[self.num_query:])
         g_camids = np.asarray(self.camids[self.num_query:])
 
-        if self.reranking:
-            print('=> Enter reranking')
-            local_qq_distmat = low_memory_local_dist(qlf.numpy(), qlf.numpy())
-            local_gg_distmat = low_memory_local_dist(glf.numpy(), glf.numpy())
-            local_dist = np.concatenate(
-                [np.concatenate([local_qq_distmat, local_distmat], axis=1),
-                 np.concatenate([local_distmat.T, local_gg_distmat], axis=1)],
-                axis=0)
-            # distmat = re_ranking(qf, gf, k1=20, k2=6, lambda_value=0.3)
-            distmat = re_ranking(qf, gf, k1=30, k2=10, lambda_value=0.2)
-            print("Using global and local branches for reranking")
-            distmat = re_ranking(qf,gf,k1=20,k2=6,lambda_value=0.3,local_distmat=local_dist,only_local=False)
-        else:
-            if self.method == 'euclidean':
-                print('=> Computing DistMat with euclidean distance')
-                distmat = euclidean_distance(qf, gf)
-                
-            elif self.method == 'cosine':
-                print('=> Computing DistMat with cosine similarity')
-                distmat = cosine_similarity(qf, gf)
-        if self.test_distance == 'global_local' and not self.reranking:
+        if self.method == 'euclidean':
+            print('=> Computing DistMat with euclidean distance')
+            distmat = euclidean_distance(qf, gf)
+            
+        elif self.method == 'cosine':
+            print('=> Computing DistMat with cosine similarity')
+            distmat = cosine_similarity(qf, gf)
+        if self.test_distance == 'global_local':
             qlf = qlf.permute(0,2,1)
             glf = glf.permute(0,2,1)
             local_distmat = low_memory_local_dist(qlf.numpy(),glf.numpy())
             distmat = local_distmat + distmat
+
+        if self.metrics == 'cuhk03':
+            cmc, mAP = eval_cuhk03(distmat, q_pids, g_pids, q_camids, g_camids)
+        else:
+            cmc, mAP = eval_func(distmat, q_pids, g_pids, q_camids, g_camids)
+
+        if self.reranking:
+            if self.test_distance == 'global':
+                print("Only using global branch for reranking")
+                distmat = re_ranking(qf,gf,k1=20, k2=6, lambda_value=0.3)
+            else:
+                print('=> Enter reranking')
+                local_qq_distmat = low_memory_local_dist(qlf.numpy(), qlf.numpy())
+                local_gg_distmat = low_memory_local_dist(glf.numpy(), glf.numpy())
+                local_dist = np.concatenate(
+                    [np.concatenate([local_qq_distmat, local_distmat], axis=1),
+                    np.concatenate([local_distmat.T, local_gg_distmat], axis=1)],
+                    axis=0)
+                if self.test_distance == 'local':
+                    print("Only using local branch for reranking")
+                    distmat = re_ranking(qf,gf,k1=20,k2=6,lambda_value=0.3,local_distmat=local_dist,only_local=True)
+                else:
+                    distmat = re_ranking(qf, gf, k1=30, k2=10, lambda_value=0.2)
+                    print("Using global and local branches for reranking")
+                    distmat = re_ranking(qf,gf,k1=20,k2=6,lambda_value=0.3,local_distmat=local_dist,only_local=False)
+
         if self.metrics == 'cuhk03':
             cmc, mAP = eval_cuhk03(distmat, q_pids, g_pids, q_camids, g_camids)
         else:
