@@ -215,17 +215,22 @@ class R1_mAP():
         self.pids = []
         self.camids = []
         self.lf = []
+        self.x = []
 
     def update(self, output):  # called once for each batch
-        feat, lf, pid, camid = output
-        self.feats.append(feat)
-        self.lf.append(lf)
+        # feat, lf, pid, camid = output
+        feat, lf, x, pid, camid = output
+        self.feats.append(feat.cpu())
+        self.lf.append(lf.cpu())
         self.pids.extend(np.asarray(pid))
         self.camids.extend(np.asarray(camid))
+        self.x.append(x.cpu())
 
     def compute(self):  # called after each epoch
         feats = torch.cat(self.feats, dim=0)
         lfs = torch.cat(self.lf, dim=0)
+        x_f = torch.cat(self.x, dim=0)
+        # x_f = np.concatenate(self.x, axis=0)
         if self.feat_norm:
             print("The test feature is normalized")
             feats = torch.nn.functional.normalize(feats, dim=1, p=2)  # along channel
@@ -233,11 +238,13 @@ class R1_mAP():
         # query
         qf = feats[:self.num_query]
         qlf = lfs[:self.num_query]
+        x_q = x_f[:self.num_query]
         q_pids = np.asarray(self.pids[:self.num_query])
         q_camids = np.asarray(self.camids[:self.num_query])
         # gallery
         gf = feats[self.num_query:]
         glf = lfs[self.num_query:]
+        x_g = x_f[self.num_query:]
         g_pids = np.asarray(self.pids[self.num_query:])
         g_camids = np.asarray(self.camids[self.num_query:])
 
@@ -279,9 +286,11 @@ class R1_mAP():
                     print("Using global and local branches for reranking")
                     distmat = re_ranking(qf,gf,k1=20,k2=6,lambda_value=0.3,local_distmat=local_dist,only_local=False)
 
-        if self.metrics == 'cuhk03':
-            cmc, mAP = eval_cuhk03(distmat, q_pids, g_pids, q_camids, g_camids)
-        else:
-            cmc, mAP = eval_func(distmat, q_pids, g_pids, q_camids, g_camids)
+        # if self.metrics == 'cuhk03':
+        #     cmc, mAP = eval_cuhk03(distmat, q_pids, g_pids, q_camids, g_camids)
+        # else:
+        #     cmc, mAP = eval_func(distmat, q_pids, g_pids, q_camids, g_camids)
 
-        return cmc, mAP, distmat, self.pids, self.camids, qf, gf
+        # return cmc, mAP, distmat, self.pids, self.camids, qf, gf, qlf, glf
+        return cmc, mAP, distmat, self.pids, self.camids, qf, gf, qlf, glf, x_q, x_g
+

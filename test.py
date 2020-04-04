@@ -1,7 +1,7 @@
 import os
 from torch.backends import cudnn
 
-from config import Config9, Config10, Config11, Config12, Config13, Config14
+from config import Config9, Config10, Config11, Config12, Config13, Config14, Config15, Config16
 from datasets import make_dataloader
 from model import make_model
 from processor import do_inference
@@ -9,7 +9,7 @@ from utils.logger import setup_logger
 
 
 if __name__ == "__main__":  
-    cfg = Config14()
+    cfg = Config12()
     log_dir = cfg.LOG_DIR
     logger = setup_logger('{}.test'.format(cfg.PROJECT_NAME), log_dir)
     os.environ['CUDA_VISIBLE_DEVICES'] = cfg.DEVICE_ID
@@ -18,7 +18,7 @@ if __name__ == "__main__":
     train_loader, val_loader, num_query, num_classes = make_dataloader(cfg)
     model = make_model(cfg, num_classes)
     if cfg.TEST_MULTIPLE:
-        for i in range(30, 60, 5):
+        for i in range(100, 200, 5):
             test_weight = cfg.TEST_WEIGHT
             t = test_weight.split('_')
             test_weight = ""

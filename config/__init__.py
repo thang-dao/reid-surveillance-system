@@ -1,4 +1,4 @@
-from .configs import Config7, Config8, Config9, Config10, Config11, Config12, Config13, Config14, Config_9_1, Config_9_2
+from .configs import Config9, Config10, Config11, Config12, Config13, Config14, Config_9_1, Config15, Config16
 
 __all__ = ['Config', \
            'Config1', \
@@ -14,5 +14,6 @@ __all__ = ['Config', \
            'Config11', \
            'Config13', \
            'Config14', \
-           'Config_9_1', \
-           'Config_9_2']
+           'Config_9_1',\
+           'Config15', \
+           'Confi16']

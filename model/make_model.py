@@ -132,7 +132,7 @@ class Backbone(nn.Module):
             self.base = torchvision.models.resnet50(pretrained=True)
             self.base = nn.Sequential(*list(self.base.children())[:-2])
             print('unsupported backbone! only support resnet50, but got {}'.format(model_name))
-
+        # print(self.base)
         if pretrain_choice == 'imagenet':
             self.base.load_param(model_path)
             print('Loading pretrained ImageNet model......')
@@ -152,10 +152,10 @@ class Backbone(nn.Module):
         self.local_bn = nn.BatchNorm2d(self.local_conv_out_channels)
         self.local_relu = nn.ReLU(inplace=True)
         # self.horizon_pool = nn.functional.max_pool2d(input=x,kernel_size= (1, inp_size[3]))
-        self.bottleneck1d = nn.BatchNorm1d(self.in_planes)
-        self.bottleneck = nn.BatchNorm2d(self.in_planes)
+        self.bottleneck = nn.BatchNorm1d(self.in_planes)
         self.bottleneck.bias.requires_grad_(False)
         self.bottleneck.apply(weights_init_kaiming)
+        self.bottleneck1d = nn.BatchNorm1d(self.in_planes)
 
     def _init_params(self):
         for m in self.modules():
@@ -177,13 +177,19 @@ class Backbone(nn.Module):
     def forward(self, x, label=None):
       # label is unused if self.cos_layer == 'no'
         x = self.base(x)
+        # import pdb; pdb.set_trace()
+        # print(x.shape)
         d_feat = torch.zeros([x.shape[0], x.shape[1], 8, 4])
         if self.last_stride == 1:
             for i in range(8):
                 for j in range(4):
-                    d_feat[:,:,i,j] = x[:,:,2*i,2*j].clone()
+                    # d_feat[:,:,i,j] = x[:,:,2*i,2*j].clone()
+                    d_feat[:,:,i,j] = x[:,:,2*i,2*j]
+                    d_feat = d_feat.cuda()
+                    # d_feat = d_feat.to("cuda:2")
         else:
             d_feat = x
+        # import pdb; pdb.set_trace()
         if self.loss_type == 'aligned':
             global_feat = nn.functional.avg_pool2d(x, x.size()[2:])
             global_feat = global_feat.view(global_feat.size(0), -1)
@@ -198,7 +204,8 @@ class Backbone(nn.Module):
                 local_feat = local_feat / torch.pow(local_feat,2).sum(dim=1, keepdim=True).clamp(min=1e-12).sqrt()
                 return global_feat, local_feat
 
-        elif 'aligned' in self.loss_type:
+
+        elif 'aligned+pcb' in self.loss_type:
             global_feat = nn.functional.avg_pool2d(x, x.size()[2:])
             global_feat = global_feat.view(global_feat.size(0), -1)
             v_g = self.parts_avgpool(x) 
@@ -214,14 +221,33 @@ class Backbone(nn.Module):
                 local_feat = nn.functional.max_pool2d(input=d_feat,kernel_size= (1, d_feat.size()[3])).cuda()
                 local_feat = self.local_relu(self.local_bn(self.local_conv(local_feat)))
                 preds = self.classifier(global_feat)
+                # print(global_feat.requires_grad, local_feat.requires_grad)
                 return preds, global_feat, local_feat, y
+            else:
+                # local_feat = nn.functional.max_pool2d(input=d_feat,kernel_size= (1, d_feat.size()[3])).cuda()
+                local_feat = nn.functional.max_pool2d(input=d_feat,kernel_size= (1, d_feat.size()[3]))
+                local_feat = local_feat.view(local_feat.size()[0:3])
+                local_feat = local_feat / torch.pow(local_feat,2).sum(dim=1, keepdim=True).clamp(min=1e-12).sqrt()
+                # print(global_feat.requires_grad, local_feat.requires_grad)
+                return x, global_feat, local_feat
+                # return global_feat, local_feat
+
+        elif 'aligned+arcface' in self.loss_type:
+            global_feat = nn.functional.avg_pool2d(x, x.shape[2:4])
+            global_feat = global_feat.view(global_feat.shape[0], -1)  # flatten to (bs, 2048)
+            feat = self.bottleneck(global_feat)
+            if self.training:
+                local_feat = nn.functional.max_pool2d(input=d_feat,kernel_size= (1, d_feat.size()[3])).cuda()
+                local_feat = self.local_relu(self.local_bn(self.local_conv(local_feat)))
+                if self.cos_layer:
+                    cls_score = self.arcface(feat, label)
+                    return cls_score, feat, local_feat
             else:
                 local_feat = nn.functional.max_pool2d(input=d_feat,kernel_size= (1, d_feat.size()[3]))
                 local_feat = local_feat.view(local_feat.size()[0:3])
                 local_feat = local_feat / torch.pow(local_feat,2).sum(dim=1, keepdim=True).clamp(min=1e-12).sqrt()
-                return global_feat, local_feat
-        
-        
+                return feat, local_feat
+
     def load_param(self, trained_path):
         param_dict = torch.load(trained_path)
         for i in param_dict:

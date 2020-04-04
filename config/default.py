@@ -75,6 +75,10 @@ class DefaultConfig:
         self.IMG_PATH = "imgpath.npy"
         self.Q_FEATS = "qfeats.pth"  # query feats
         self.G_FEATS = "gfeats.pth"  # gallery feats
+        self.QL_FEATS = "qlfeats.pth" # query local feat
+        self.GL_FEATS = "glfeats.pth" # gallary local feat
+        self.XQ_FEATS = "xq_feat.pth" # x query feats
+        self.XG_FEATS = "xg_feat.pth"
         self.TEST_METHOD = 'cosine'
         self.FLIP_FEATS = 'off'  # using fliped feature for testing, option: 'on', 'off'
         self.RERANKING = False  # re-ranking
