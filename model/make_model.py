@@ -5,6 +5,7 @@ import torch.nn as nn
 import torchvision
 import numpy as np
 from .backbones.resnet import ResNet, BasicBlock, Bottleneck
+from .backbones.iresnet import iresnet101, iresnet50
 from loss.arcface import ArcFace
 
 def weights_init_kaiming(m):
@@ -105,11 +106,11 @@ class Backbone(nn.Module):
     def __init__(self, num_classes, cfg):
         super(Backbone, self).__init__()
         self.last_stride = cfg.LAST_STRIDE
-        model_path = cfg.PRETRAIN_PATH
+        self.model_path = cfg.PRETRAIN_PATH
         self.cos_layer = cfg.COS_LAYER
         self.num_classes = num_classes
-        model_name = cfg.MODEL_NAME
-        pretrain_choice = cfg.PRETRAIN_CHOICE
+        self.model_name = cfg.MODEL_NAME
+        self.pretrain_choice = cfg.PRETRAIN_CHOICE
         self.loss_type = cfg.LOSS_TYPE
     # PCB 
         self.parts = 6
@@ -122,24 +123,29 @@ class Backbone(nn.Module):
         self.classifiers = nn.ModuleList([nn.Linear(self.feature_dim, num_classes) for _ in range(self.parts)])
 
         self._init_params()
-        if model_name == 'resnet50':
+        if self.model_name == 'resnet50':
             self.in_planes = 2048
             self.base = ResNet(last_stride=self.last_stride,
                                block=Bottleneck,
                                layers=[3, 4, 6, 3])
+        elif self.model_name == 'iresnet101':
+            self.in_planes = 2048
+            self.base = iresnet101(pretrained=True)
+        elif self.model_name == 'iresnet50':
+            self.in_planes = 2048
+            self.base = iresnet50(pretrained=True)
         else:
             self.in_planes = 2048
             self.base = torchvision.models.resnet50(pretrained=True)
             self.base = nn.Sequential(*list(self.base.children())[:-2])
             print('unsupported backbone! only support resnet50, but got {}'.format(model_name))
         # print(self.base)
-        if pretrain_choice == 'imagenet':
-            self.base.load_param(model_path)
+        if self.pretrain_choice == 'imagenet' and not 'iresnet' in self.model_name:
+            self.base.load_param(self.model_path)
             print('Loading pretrained ImageNet model......')
         self.local_conv_out_channels = 128
         self.gap = nn.AdaptiveAvgPool2d(1)
         
-
         if self.cos_layer:
             print('using cosine layer')
             self.arcface = ArcFace(self.in_planes, self.num_classes, s=30.0, m=0.50)
@@ -177,8 +183,6 @@ class Backbone(nn.Module):
     def forward(self, x, label=None):
       # label is unused if self.cos_layer == 'no'
         x = self.base(x)
-        # import pdb; pdb.set_trace()
-        # print(x.shape)
         d_feat = torch.zeros([x.shape[0], x.shape[1], 8, 4])
         if self.last_stride == 1:
             for i in range(8):
@@ -186,11 +190,9 @@ class Backbone(nn.Module):
                     # d_feat[:,:,i,j] = x[:,:,2*i,2*j].clone()
                     d_feat[:,:,i,j] = x[:,:,2*i,2*j]
                     d_feat = d_feat.cuda()
-                    # d_feat = d_feat.to("cuda:2")
         else:
             d_feat = x
-        # import pdb; pdb.set_trace()
-        if self.loss_type == 'aligned':
+        if self.loss_type == "softmax+triplet+aligned":
             global_feat = nn.functional.avg_pool2d(x, x.size()[2:])
             global_feat = global_feat.view(global_feat.size(0), -1)
             if self.training:
@@ -202,8 +204,7 @@ class Backbone(nn.Module):
                 local_feat = nn.functional.max_pool2d(input=d_feat,kernel_size= (1, d_feat.size()[3]))
                 local_feat = local_feat.view(local_feat.size()[0:3])
                 local_feat = local_feat / torch.pow(local_feat,2).sum(dim=1, keepdim=True).clamp(min=1e-12).sqrt()
-                return global_feat, local_feat
-
+                return x, global_feat, local_feat
 
         elif 'aligned+pcb' in self.loss_type:
             global_feat = nn.functional.avg_pool2d(x, x.size()[2:])
@@ -246,16 +247,25 @@ class Backbone(nn.Module):
                 local_feat = nn.functional.max_pool2d(input=d_feat,kernel_size= (1, d_feat.size()[3]))
                 local_feat = local_feat.view(local_feat.size()[0:3])
                 local_feat = local_feat / torch.pow(local_feat,2).sum(dim=1, keepdim=True).clamp(min=1e-12).sqrt()
-                return feat, local_feat
+                return x, feat, local_feat
 
     def load_param(self, trained_path):
         param_dict = torch.load(trained_path)
         for i in param_dict:
+            # print(i.find('.'))
+            if 'classifier' in i or 'arcface' in i:
+                continue
+            self.state_dict()[i[7:]].copy_(param_dict[i])
+        print('Loading pretrained model from {}'.format(trained_path))
+
+    def load_param_iresnet(self, trained_path):
+        param_dict = torch.load(trained_path)
+        for i in param_dict:
+            print(i.find('.'))
             if 'classifier' in i or 'arcface' in i:
                 continue
             self.state_dict()[i].copy_(param_dict[i])
         print('Loading pretrained model from {}'.format(trained_path))
-
 
 def make_model(cfg, num_class):
     model = Backbone(num_class, cfg)
