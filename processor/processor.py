@@ -130,6 +130,7 @@ def do_train(cfg,
                         logger.info("Epoch[{}] Iteration[{}/{}] Loss: {:.3f}, LossID: {:.3f}, LossGlobal: {:.3f}, LossLocal: {:.3f}, LossCenter: {:.3f},  Acc: {:.3f}, Base Lr: {:.2e}"
                                 .format(epoch, (n_iter + 1), len(train_loader),
                                         loss_meter.avg, loss_id.avg, loss_global.avg, loss_local.avg, loss_center.avg, acc_meter.avg, scheduler.get_lr()[0]))
+                                        
             elif cfg.LOSS_TYPE == 'softmax+triplet+aligned':
                 score, feat, local_feat = model(img,target)
                 loss, _loss_id, _loss_global, _loss_local = loss_fn(score, feat, local_feat, target)  

@@ -558,10 +558,10 @@ class Config_iresnet_3(DefaultConfig):
         self.OUTPUT_DIR = './output/iresnet_aligned_pcb_center_Market1501'
         self.PRETRAIN_CHOICE = 'imagenet'
         self.PRETRAIN_PATH = './pretrained/resnet50-19c8e357.pth'
-        self.BATCH_SIZE = 64
-        self.CHECKPOINT_PERIOD = 1
+        self.BATCH_SIZE = 128
+        self.CHECKPOINT_PERIOD = 5
         self.LOSS_TYPE = 'aligned+pcb+center'
-        self.TEST_WEIGHT = './output/iresnet_aligned_pcb_center_Market1501/iresnet_50.pth'
+        self.TEST_WEIGHT = './output/iresnet_aligned_pcb_center_Market1501/iresnet101_50.pth'
         self.LAST_STRIDE = 1
         self.FLIP_FEATS = 'off'
         self.HARD_FACTOR = 0.2
@@ -569,6 +569,7 @@ class Config_iresnet_3(DefaultConfig):
         self.INPUT_SIZE = [256, 128]
         self.TEST_DISTANCE = 'global_local'
         self.TEST_METHOD = 'euclidean' 
+        self.TEST_MULTIPLE = True
 
 
 class Config_iresnet_4(DefaultConfig):
@@ -634,6 +635,7 @@ class Config_iresnet_5(DefaultConfig):
         self.TEST_IMS_PER_BATCH = 128
         self.TEST_DISTANCE = 'global_local'
         self.TEST_METHOD = 'euclidean'
+        self.TEST_MULTIPLE = True
 
 # Iresnet50
 class Config_iresnet_6(DefaultConfig):
@@ -654,10 +656,77 @@ class Config_iresnet_6(DefaultConfig):
         self.OUTPUT_DIR = './output/iresnet50_aligned_pcb_Market1501'
         self.PRETRAIN_CHOICE = 'imagenet'
         self.PRETRAIN_PATH = './pretrained/iresnet-19c8e357.pth'
-        self.BATCH_SIZE = 128
+        self.BATCH_SIZE = 256
         self.CHECKPOINT_PERIOD = 5
         self.LOSS_TYPE = 'aligned+pcb'
         self.TEST_WEIGHT = './output/iresnet50_aligned_pcb_Market1501/iresnet50_50.pth'
+        self.LAST_STRIDE = 1
+        self.EVAL_PERIOD = 200
+        self.FLIP_FEATS = 'off'
+        self.HARD_FACTOR = 0.2
+        self.RERANKING = False
+        self.INPUT_SIZE = [256, 128]
+        self.TEST_DISTANCE = 'global_local'
+        self.TEST_METHOD = 'euclidean'
+        self.QUERY_DIR = '/home/vietthang/datasets/Market-1501-v15.09.15/query/'
+        self.TEST_MULTIPLE = True
+
+class Config_iresnet_7(DefaultConfig):
+    """
+    Config for aligned algorithm: global+local+center
+    No last stride then downsample 
+    Test:
+    # Global Distance: 
+    Global Distance + Local Distance: 
+    mAP: 75.3%, Rank1: 85.3%, Rank5: 93.4%, Rank10: 95.5%, @epoch: 80
+    """
+
+    def __init__(self):
+        super(Config_iresnet_7, self).__init__()
+        self.CFG_NAME = 'Aligned algorithm combine PCB add Center Loss'
+        self.MODEL_NAME = 'iresnet50'
+        # self.DATA_DIR = '/home/vietthang/dataset/Market-1501-v15.09.15'
+        self.DATA_NAME = 'dukemtmcreid'
+        self.LOG_DIR = './log/iresnet50_aligned_pcb_center_DukeMTMCREID'
+        self.OUTPUT_DIR = './output/iresnet50_aligned_pcb_center_DukeMTMCREID'
+        self.PRETRAIN_CHOICE = 'imagenet'
+        self.PRETRAIN_PATH = './pretrained/resnet50-19c8e357.pth'
+        self.BATCH_SIZE = 128
+        self.CHECKPOINT_PERIOD = 5
+        self.LOSS_TYPE = 'aligned+pcb+center'
+        self.TEST_WEIGHT = './output/iresnet50_aligned_pcb_center_DukeMTMCREID/iresnet50_50.pth'
+        self.LAST_STRIDE = 1
+        self.FLIP_FEATS = 'off'
+        self.HARD_FACTOR = 0.2
+        self.RERANKING = False
+        self.INPUT_SIZE = [256, 128]
+        self.TEST_DISTANCE = 'global_local'
+        self.TEST_METHOD = 'cosine' 
+        self.QUERY_DIR = '/home/vietthang/datasets/DukeMTMC-reID/query/'
+        self.TEST_MULTIPLE = True
+
+class Config_resnet101_Market_1(DefaultConfig):
+    """
+    Config for aligned algorithm combine PCB: global+local, 
+    No last stride then downsample 
+    Test:
+    Global Distance: mAP:79.2% , Rank1:91.2%  Rank5:96.5%, Rank10: 97.9%, @epoch:200
+    Global Distance + Local Distance: mAP:80.6% , Rank1:91.5%  Rank5:97.1%, Rank10: 98.1%, @epoch:200
+    """
+
+    def __init__(self):
+        super(Config_resnet101_Market_1, self).__init__()
+        self.CFG_NAME = 'Aligned algorithm combine PCB'
+        self.MODEL_NAME = 'resnet101'
+        self.DATA_DIR = '/home/vietthang/dataset/Market-1501-v15.09.15'
+        self.LOG_DIR = './log/resnet101_aligned_pcb_Market1501'
+        self.OUTPUT_DIR = './output/resnet101_aligned_pcb_Market1501'
+        self.PRETRAIN_CHOICE = 'imagenet'
+        self.PRETRAIN_PATH = './pretrained/resnet101-5d3b4d8f.pth'
+        self.BATCH_SIZE = 128
+        self.CHECKPOINT_PERIOD = 5
+        self.LOSS_TYPE = 'aligned+pcb'
+        self.TEST_WEIGHT = './output/resnet101_aligned_pcb_Market1501/resnet101_50.pth'
         self.LAST_STRIDE = 1
         self.EVAL_PERIOD = 5
         self.FLIP_FEATS = 'off'
@@ -667,4 +736,68 @@ class Config_iresnet_6(DefaultConfig):
         self.TEST_DISTANCE = 'global_local'
         self.TEST_METHOD = 'euclidean'
         self.QUERY_DIR = '/home/vietthang/datasets/Market-1501-v15.09.15/query/'
+        self.TEST_MULTIPLE = True
+
+class Config_resnet101_DukeMTMCREID_1(DefaultConfig):
+    """
+    Config for aligned algorithm: global+local, 
+    No last stride then downsample 
+    Test:
+    Global Distance + Local Distance: mAP: 73.7%, Rank1:85.1%  Rank5:93.0%, Rank10: 94.9%, @epoch:80
+    """
+
+    def __init__(self):
+        super(Config_resnet101_DukeMTMCREID_1, self).__init__()
+        self.CFG_NAME = 'Aligned algorithm combine PCB'
+        self.MODEL_NAME = 'resnet101'
+        self.DATA_NAME = 'dukemtmcreid'
+        self.LOG_DIR = './log/resnet101_aligned_pcb_DukeMTMCREID'
+        self.OUTPUT_DIR = './output/resnet101_aligned_pcb_DukeMTMCREID'
+        self.PRETRAIN_CHOICE = 'imagenet'
+        self.PRETRAIN_PATH = './pretrained/resnet101-5d3b4d8f.pth'
+        self.BATCH_SIZE = 128
+        self.CHECKPOINT_PERIOD = 10
+        self.LOSS_TYPE = 'aligned+pcb'
+        self.TEST_WEIGHT = './output/resnet101_aligned_pcb_DukeMTMCREID/iresnet_50.pth'
+        self.LAST_STRIDE = 1
+        self.FLIP_FEATS = 'off'
+        self.HARD_FACTOR = 0.2
+        self.RERANKING = False
+        self.INPUT_SIZE = [256, 128]
+        self.TEST_DISTANCE = 'global_local'
+        self.TEST_METHOD = 'cosine'
+        self.QUERY_DIR = '/home/vietthang/datasets/DukeMTMC-reID/query/'
+
+class Config_resnet101_CUHK03_1(DefaultConfig):
+    """
+    Config for aligned algorithm: global+local, 
+    No last stride then downsample 
+    Test:
+    Global Distance + Local Distance: 
+    """
+
+    def __init__(self):
+        super(Config_resnet101_CUHK03_1, self).__init__()
+        self.CFG_NAME = 'Aligned algorithm combine PCB and Center'
+        self.MODEL_NAME = 'resnet101'
+        self.DATA_NAME = 'cuhk03'
+        # self.DATA_DIR = '/home/vietthang/dataset/Market-1501-v15.09.15'
+        self.LOG_DIR = './log/resnet101_aligned_pcb_center_CUHK03'
+        self.OUTPUT_DIR = './output/resnet101_aligned_pcb_center_CUHK03'
+        self.PRETRAIN_CHOICE = 'imagenet'
+        self.PRETRAIN_PATH = './pretrained/resnet101-5d3b4d8f.pth'
+        self.EVAL_METRIC = 'cuhk03'
+        self.BATCH_SIZE = 128
+        self.CHECKPOINT_PERIOD = 5
+        self.EVAL_PERIOD = 20
+        self.LOSS_TYPE = 'aligned+pcb+center'
+        self.TEST_WEIGHT = './output/resnet101_aligned_pcb_center_CUHK03/iresnet_50.pth'
+        self.LAST_STRIDE = 1
+        self.FLIP_FEATS = 'off'
+        self.HARD_FACTOR = 0.2
+        self.RERANKING = False
+        self.INPUT_SIZE = [256, 128]
+        self.TEST_IMS_PER_BATCH = 128
+        self.TEST_DISTANCE = 'global_local'
+        self.TEST_METHOD = 'euclidean'
         self.TEST_MULTIPLE = True

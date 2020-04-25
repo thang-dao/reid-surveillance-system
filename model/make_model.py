@@ -128,6 +128,12 @@ class Backbone(nn.Module):
             self.base = ResNet(last_stride=self.last_stride,
                                block=Bottleneck,
                                layers=[3, 4, 6, 3])
+        elif self.model_name == 'resnet101':
+            print(self.model_name)
+            self.in_planes = 2048
+            self.base = ResNet(last_stride=self.last_stride,
+                                block=Bottleneck,
+                                layers=[3, 4, 23, 3])
         elif self.model_name == 'iresnet101':
             self.in_planes = 2048
             self.base = iresnet101(pretrained=True)
@@ -142,7 +148,7 @@ class Backbone(nn.Module):
         # print(self.base)
         if self.pretrain_choice == 'imagenet' and not 'iresnet' in self.model_name:
             self.base.load_param(self.model_path)
-            print('Loading pretrained ImageNet model......')
+            print('Loading pretrained ImageNet model......Path: {}'.format(self.model_path))
         self.local_conv_out_channels = 128
         self.gap = nn.AdaptiveAvgPool2d(1)
         
@@ -252,20 +258,15 @@ class Backbone(nn.Module):
     def load_param(self, trained_path):
         param_dict = torch.load(trained_path)
         for i in param_dict:
-            # print(i.find('.'))
+            # print(i)
             if 'classifier' in i or 'arcface' in i:
                 continue
-            self.state_dict()[i[7:]].copy_(param_dict[i])
+            if i in self.state_dict():
+                self.state_dict()[i].copy_(param_dict[i])
+            else:
+                self.state_dict()[i[7:]].copy_(param_dict[i])
         print('Loading pretrained model from {}'.format(trained_path))
 
-    def load_param_iresnet(self, trained_path):
-        param_dict = torch.load(trained_path)
-        for i in param_dict:
-            print(i.find('.'))
-            if 'classifier' in i or 'arcface' in i:
-                continue
-            self.state_dict()[i].copy_(param_dict[i])
-        print('Loading pretrained model from {}'.format(trained_path))
 
 def make_model(cfg, num_class):
     model = Backbone(num_class, cfg)

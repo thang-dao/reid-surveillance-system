@@ -16,7 +16,7 @@ class DefaultConfig:
         self.TEST_DISTANCE = 'global'
         self.LOG_PERIOD = 10  # iteration of displaying training log
         self.CHECKPOINT_PERIOD = 10  # saving model period
-        self.EVAL_PERIOD = 40  # validation period
+        self.EVAL_PERIOD = 20  # validation period
         self.EVAL_METRIC = 'market1501'
         self.MAX_EPOCHS = 200  # max training epochs
 
@@ -79,7 +79,8 @@ class DefaultConfig:
         self.GL_FEATS = "glfeats.pth" # gallary local feat
         self.XQ_FEATS = "xq_feat.pth" # x query feats
         self.XG_FEATS = "xg_feat.pth"
+        self.SAVE_X = False
         self.TEST_METHOD = 'cosine'
         self.FLIP_FEATS = 'off'  # using fliped feature for testing, option: 'on', 'off'
         self.RERANKING = False  # re-ranking
-        self.QUERY_DIR = '/home/lujj/datasets/Market-1501-v15.09.15/query/'
+        self.QUERY_DIR = '/home/vietthang/datasets/Market-1501-v15.09.15/query/'
