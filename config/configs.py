@@ -609,7 +609,7 @@ class Config_iresnet101_CUHK03(DefaultConfig):
         self.CHECKPOINT_PERIOD = 5
         self.EVAL_PERIOD = 20
         self.LOSS_TYPE = 'aligned+pcb'
-        self.TEST_WEIGHT = './output/iresnet101_aligned_pcb_CUHK03/resnet50_90.pth'
+        self.TEST_WEIGHT = './output/iresnet101_aligned_pcb_CUHK03/iresnet101_90.pth'
         self.LAST_STRIDE = 1
         self.FLIP_FEATS = 'off'
         self.HARD_FACTOR = 0.2
@@ -617,7 +617,8 @@ class Config_iresnet101_CUHK03(DefaultConfig):
         self.INPUT_SIZE = [256, 128]
         self.TEST_DISTANCE = 'global_local'
         self.TEST_METHOD = 'euclidean'
-
+        self.TEST_MULTIPLE = True
+        
 class Config_iresnet101_CUHK03_CT(DefaultConfig):
     """
     Config for aligned algorithm: global+local, 
