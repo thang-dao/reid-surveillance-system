@@ -1,7 +1,7 @@
+
 import os
 from torch.backends import cudnn
-
-from config import Config
+from config import Config_iresnet_3
 from utils.logger import setup_logger
 from datasets import make_dataloader
 from model import make_model
@@ -10,7 +10,7 @@ from loss import make_loss
 from processor import do_train
 
 if __name__ == '__main__':
-    cfg = Config()
+    cfg = Config_iresnet_3()
     if not os.path.exists(cfg.LOG_DIR):
         os.mkdir(cfg.LOG_DIR)
     logger = setup_logger('{}'.format(cfg.PROJECT_NAME), cfg.LOG_DIR)
@@ -19,13 +19,14 @@ if __name__ == '__main__':
 
     cudnn.benchmark = True
     # This flag allows you to enable the inbuilt cudnn auto-tuner to find the best algorithm to use for your hardware.
-
     train_loader, val_loader, num_query, num_classes = make_dataloader(cfg)
     model = make_model(cfg, num_class=num_classes)
-
+    # print(model)
     loss_func, center_criterion = make_loss(cfg, num_classes=num_classes)
 
     optimizer, optimizer_center = make_optimizer(cfg, model, center_criterion)
+    # optimizer, optimizer_center = adapt_make_optimizer(cfg, model, center_criterion)
+    # import pdb; pdb.set_trace()
     scheduler = WarmupMultiStepLR(optimizer, cfg.STEPS, cfg.GAMMA,
                                   cfg.WARMUP_FACTOR,
                                   cfg.WARMUP_EPOCHS, cfg.WARMUP_METHOD)

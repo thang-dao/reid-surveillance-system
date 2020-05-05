@@ -9,18 +9,20 @@ class DefaultConfig:
     """
 
     def __init__(self):
-        self.PROJECT_NAME = 'person-reid-tiny-baseline'  # project name
+        self.PROJECT_NAME = 'person-reid-surveillance-system-baseline'  # project name
         self.LOG_DIR = "./log"  # log directory
         self.OUTPUT_DIR = "./output"  # saved model directory
-        self.DEVICE_ID = "0"  # GPU IDs, i.e. "0,1,2" for multiple GPUs
-
-        self.LOG_PERIOD = 50  # iteration of displaying training log
-        self.CHECKPOINT_PERIOD = 5  # saving model period
-        self.EVAL_PERIOD = 5  # validation period
+        self.DEVICE_ID = "cuda:0"  # GPU IDs, i.e. "0,1,2" for multiple GPUs
+        self.TEST_DISTANCE = 'global'
+        self.LOG_PERIOD = 10  # iteration of displaying training log
+        self.CHECKPOINT_PERIOD = 10  # saving model period
+        self.EVAL_PERIOD = 20  # validation period
+        self.EVAL_METRIC = 'market1501'
         self.MAX_EPOCHS = 200  # max training epochs
 
         # data
         self.DATA_DIR = "/home/lujj/datasets/Market-1501-v15.09.15/"  # dataset path
+        self.DATA_NAME = 'market1501'
         self.DATALOADER_NUM_WORKERS = 8  # number of dataloader workers
         self.SAMPLER = 'triplet'  # batch sampler, option: 'triplet','softmax'
         self.BATCH_SIZE = 1  # MxN, M: number of persons, N: number of images of per person
@@ -41,11 +43,12 @@ class DefaultConfig:
         # solver
         self.OPTIMIZER = 'Adam'  # optimizer
         self.BASE_LR = 0.00035  # base learning rate
+        self.CLASSIFIER_LR = 0.02
 
         self.CE_LOSS_WEIGHT = 1.0  # weight of softmax loss
         self.TRIPLET_LOSS_WEIGHT = 1.0  # weight of triplet loss
         self.CENTER_LOSS_WEIGHT = 0.0005  # weight of center loss
-
+        self.LOCAL_LOSS_WEIGHT = 1
         self.HARD_FACTOR = 0.0 # harder example mining
 
         self.WEIGHT_DECAY = 0.0005
@@ -62,6 +65,7 @@ class DefaultConfig:
         self.WARMUP_METHOD = "linear"  # option: 'linear','constant'
 
         # test
+        self.TEST_MULTIPLE = False
         self.TEST_IMS_PER_BATCH = 128
         self.FEAT_NORM = "yes"
         self.TEST_WEIGHT = './output/resnet50_175.pth'
@@ -71,7 +75,12 @@ class DefaultConfig:
         self.IMG_PATH = "imgpath.npy"
         self.Q_FEATS = "qfeats.pth"  # query feats
         self.G_FEATS = "gfeats.pth"  # gallery feats
+        self.QL_FEATS = "qlfeats.pth" # query local feat
+        self.GL_FEATS = "glfeats.pth" # gallary local feat
+        self.XQ_FEATS = "xq_feat.pth" # x query feats
+        self.XG_FEATS = "xg_feat.pth"
+        self.SAVE_X = False
         self.TEST_METHOD = 'cosine'
         self.FLIP_FEATS = 'off'  # using fliped feature for testing, option: 'on', 'off'
         self.RERANKING = False  # re-ranking
-        self.QUERY_DIR = '/home/lujj/datasets/Market-1501-v15.09.15/query/'
+        self.QUERY_DIR = '/home/vietthang/datasets/Market-1501-v15.09.15/query/'

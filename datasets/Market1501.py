@@ -5,9 +5,12 @@ import re
 import os
 
 class Market1501(BaseImageDataset):
-    def __init__(self, data_dir = 'data_dir', verbose = True):
+    dataset_dir = 'Market-1501-v15.09.15'
+    def __init__(self, root = '/home/vietthang/datasets', verbose = True):
         super(Market1501, self).__init__()
-        self.dataset_dir = data_dir
+        # self.dataset_dir = data_dir
+        self.root = osp.abspath(osp.expanduser(root))
+        self.dataset_dir = osp.join(self.root, self.dataset_dir)
         self.train_dir = osp.join(self.dataset_dir, 'bounding_box_train')
         self.query_dir = osp.join(self.dataset_dir, 'query')
         self.gallery_dir = osp.join(self.dataset_dir, 'bounding_box_test')
@@ -51,5 +54,5 @@ class Market1501(BaseImageDataset):
 
         return dataset
 
-if __name__ == "__main__":
-    dataset = Market1501(data_dir="../datasets/market1501/Market-1501-v15.09.15")
+# if __name__ == "__main__":
+    # dataset = Market1501()
