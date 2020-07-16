@@ -1,4 +1,4 @@
-from .configs import Config_iresnet_1, Config_iresnet_2, Config9, Config_iresnet_3, Config_iresnet_5, Config_iresnet_6
+from .configs import Config_iresnet101_CUHK03_LABELED_CT
 
 __all__ = ['Config', \
            'Config1', \

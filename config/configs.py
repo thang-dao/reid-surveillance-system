@@ -176,6 +176,7 @@ class Config_resnet50_CUHK03(DefaultConfig):
         self.INPUT_SIZE = [256, 128]
         self.TEST_DISTANCE = 'global_local'
         self.TEST_METHOD = 'euclidean'
+        self.cuhk03_labeled = False
 
 class Config_resnet50_CUHK03_CT(DefaultConfig):
     """
@@ -209,7 +210,7 @@ class Config_resnet50_CUHK03_CT(DefaultConfig):
         self.TEST_IMS_PER_BATCH = 128
         self.TEST_DISTANCE = 'global_local'
         self.TEST_METHOD = 'euclidean'
-
+        self.cuhk03_labeled = False
 
 class Config15(DefaultConfig):
     """
@@ -325,6 +326,7 @@ class Config_resnet50_CUHK03(DefaultConfig):
         self.TEST_DISTANCE = 'global_local'
         self.TEST_METHOD = 'euclidean' 
         self.TEST_MULTIPLE = True
+        self.cuhk03_labeled = False
 
 class Config18(DefaultConfig):
     """
@@ -586,7 +588,7 @@ class Config_iresnet101_DukeMTMCREID(DefaultConfig):
         self.TEST_METHOD = 'cosine'
         self.QUERY_DIR = '/home/vietthang/datasets/DukeMTMC-reID/query/'
 
-class Config_iresnet101_CUHK03(DefaultConfig):
+class Config_iresnet101_CUHK03_LABELED(DefaultConfig):
     """
     Config for aligned algorithm: global+local, 
     No last stride then downsample 
@@ -595,21 +597,21 @@ class Config_iresnet101_CUHK03(DefaultConfig):
     """
 
     def __init__(self):
-        super(Config_iresnet101_CUHK03, self).__init__()
+        super(Config_iresnet101_CUHK03_LABELED, self).__init__()
         self.CFG_NAME = 'Aligned algorithm combine PCB'
         self.MODEL_NAME = 'iresnet101'
         self.DATA_NAME = 'cuhk03'
         # self.DATA_DIR = '/home/vietthang/dataset/Market-1501-v15.09.15'
-        self.LOG_DIR = './log/iresnet101_aligned_pcb_CUHK03'
-        self.OUTPUT_DIR = './output/iresnet101_aligned_pcb_CUHK03'
+        self.LOG_DIR = './log/iresnet101_aligned_pcb_CUHK03_labeled'
+        self.OUTPUT_DIR = './output/iresnet101_aligned_pcb_CUHK03_labeled'
         self.PRETRAIN_CHOICE = 'imagenet'
         self.PRETRAIN_PATH = './pretrained/resnet50-19c8e357.pth'
         self.EVAL_METRIC = 'cuhk03'
-        self.BATCH_SIZE = 128
+        self.BATCH_SIZE = 64
         self.CHECKPOINT_PERIOD = 5
         self.EVAL_PERIOD = 20
         self.LOSS_TYPE = 'aligned+pcb'
-        self.TEST_WEIGHT = './output/iresnet101_aligned_pcb_CUHK03/iresnet101_90.pth'
+        self.TEST_WEIGHT = './output/iresnet101_aligned_pcb_CUHK03_labeled/iresnet101_195.pth'
         self.LAST_STRIDE = 1
         self.FLIP_FEATS = 'off'
         self.HARD_FACTOR = 0.2
@@ -617,9 +619,10 @@ class Config_iresnet101_CUHK03(DefaultConfig):
         self.INPUT_SIZE = [256, 128]
         self.TEST_DISTANCE = 'global_local'
         self.TEST_METHOD = 'euclidean'
-        self.TEST_MULTIPLE = True
+        self.TEST_MULTIPLE = False
+        self.cuhk03_labeled = True
         
-class Config_iresnet101_CUHK03_CT(DefaultConfig):
+class Config_iresnet101_CUHK03_LABELED_CT(DefaultConfig):
     """
     Config for aligned algorithm: global+local, 
     No last stride then downsample 
@@ -628,13 +631,13 @@ class Config_iresnet101_CUHK03_CT(DefaultConfig):
     """
 
     def __init__(self):
-        super(Config_iresnet101_CUHK03_CT, self).__init__()
+        super(Config_iresnet101_CUHK03_LABELED_CT, self).__init__()
         self.CFG_NAME = 'Aligned algorithm combine PCB and Center'
         self.MODEL_NAME = 'iresnet101'
         self.DATA_NAME = 'cuhk03'
         # self.DATA_DIR = '/home/vietthang/dataset/Market-1501-v15.09.15'
-        self.LOG_DIR = './log/iresnet_aligned_pcb_center_CUHK03'
-        self.OUTPUT_DIR = './output/iresnet_aligned_pcb_center_CUHK03'
+        self.LOG_DIR = './log/iresnet_aligned_pcb_center_CUHK03_labeled'
+        self.OUTPUT_DIR = './output/iresnet_aligned_pcb_center_CUHK03_labeled'
         self.PRETRAIN_CHOICE = 'imagenet'
         self.PRETRAIN_PATH = './pretrained/resnet50-19c8e357.pth'
         self.EVAL_METRIC = 'cuhk03'
@@ -642,7 +645,7 @@ class Config_iresnet101_CUHK03_CT(DefaultConfig):
         self.CHECKPOINT_PERIOD = 5
         self.EVAL_PERIOD = 20
         self.LOSS_TYPE = 'aligned+pcb+center'
-        self.TEST_WEIGHT = './output/iresnet_aligned_pcb_center_CUHK03/iresnet_50.pth'
+        self.TEST_WEIGHT = './output/iresnet_aligned_pcb_center_CUHK03_labeled/iresnet101_110.pth'
         self.LAST_STRIDE = 1
         self.FLIP_FEATS = 'off'
         self.HARD_FACTOR = 0.2
@@ -651,7 +654,8 @@ class Config_iresnet101_CUHK03_CT(DefaultConfig):
         self.TEST_IMS_PER_BATCH = 128
         self.TEST_DISTANCE = 'global_local'
         self.TEST_METHOD = 'euclidean'
-        self.TEST_MULTIPLE = True
+        self.TEST_MULTIPLE = False
+        self.cuhk03_labeled = True
 
 # Iresnet50
 class Config_iresnet50_Market(DefaultConfig):

@@ -275,14 +275,14 @@ class R1_mAP():
                     print("Only using local branch for reranking")
                     distmat = re_ranking(qf,gf,k1=20,k2=6,lambda_value=0.3,local_distmat=local_dist,only_local=True)
                 else:
-                    distmat = re_ranking(qf, gf, k1=30, k2=10, lambda_value=0.2)
+                    # distmat = re_ranking(qf, gf, k1=30, k2=10, lambda_value=0.2)
                     print("Using global and local branches for reranking")
                     distmat = re_ranking(qf,gf,k1=20,k2=6,lambda_value=0.3,local_distmat=local_dist,only_local=False)
 
-        # if self.metrics == 'cuhk03':
-        #     cmc, mAP = eval_cuhk03(distmat, q_pids, g_pids, q_camids, g_camids)
-        # else:
-        #     cmc, mAP = eval_func(distmat, q_pids, g_pids, q_camids, g_camids)
+        if self.metrics == 'cuhk03':
+            cmc, mAP = eval_cuhk03(distmat, q_pids, g_pids, q_camids, g_camids)
+        else:
+            cmc, mAP = eval_func(distmat, q_pids, g_pids, q_camids, g_camids)
 
         # return cmc, mAP, distmat, self.pids, self.camids, qf, gf, qlf, glf
         return cmc, mAP, distmat, self.pids, self.camids, qf, gf, qlf, glf

@@ -58,7 +58,7 @@ def make_dataloader(cfg):
     elif cfg.DATA_NAME == 'dukemtmcreid':
         dataset = DukeMTMCreID()
     elif cfg.DATA_NAME == 'cuhk03':
-        dataset = CUHK03()
+        dataset = CUHK03(cuhk03_labeled=cfg.cuhk03_labeled)
     num_classes = dataset.num_train_pids
     
     train_set = ImageDataset(dataset.train, train_transforms)
