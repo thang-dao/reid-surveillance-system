@@ -24,7 +24,7 @@ class CUHK03(BaseImageDataset):
 
     def __init__(
         self,
-        root='/home/vietthang/datasets',
+        root='../dataset',
         split_id=0,
         cuhk03_labeled=False,
         cuhk03_classic_split=False,
