@@ -24,7 +24,7 @@ class DukeMTMCreID(BaseImageDataset):
     dataset_dir = 'DukeMTMC-reID'
     dataset_url = 'http://vision.cs.duke.edu/DukeMTMC/data/misc/DukeMTMC-reID.zip'
 
-    def __init__(self, root='/home/vietthang/datasets', verbose=True):
+    def __init__(self, root='../dataset', verbose=True):
         super(DukeMTMCreID, self).__init__()
         self.root = osp.abspath(osp.expanduser(root))
         # self.root = root

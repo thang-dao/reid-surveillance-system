@@ -22,7 +22,7 @@ class CUHK03(BaseImageDataset):
     dataset_dir = 'cuhk03'
     dataset_url = None
 
-    def __init__(
+    def __init__(   
         self,
         root='../dataset',
         split_id=0,

@@ -6,7 +6,7 @@ import os
 
 class Market1501(BaseImageDataset):
     dataset_dir = 'Market-1501-v15.09.15'
-    def __init__(self, root = '/home/vietthang/datasets', verbose = True):
+    def __init__(self, root = '../dataset', verbose = True):
         super(Market1501, self).__init__()
         # self.dataset_dir = data_dir
         self.root = osp.abspath(osp.expanduser(root))
