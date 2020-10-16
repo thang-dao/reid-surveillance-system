@@ -22,8 +22,9 @@ python train.py
 python test.py
 ```
 ### Results
+
 |model|dataset|method|mAP|Rank1|
-|---- |----  |----|----|
+|-----|-------|------|---|-----|
 |iresnet101|Market-1501|local loss + global loss + softmax| 84.3| 93.6|
 |iresnet101|DukeMTMC-reID|local loss + global loss + softmax| 86.0| 74.4|
 |iresnet101|CUHK03-detected|local loss + global loss + softmax| 73.7| 70.8|
@@ -38,7 +39,7 @@ The results is ranked (query|rank1|rank2|...) and retrieved images have a green 
 ![alt text](retrieved.png)
 
 ### ACKNOWLEDGEMENT
-Thanks for public projects [person-reid-tiny-baseline] (https://github.com/lulujianjie/person-reid-tiny-baseline) of [JackLu] (https://github.com/lulujianjie)
+Thanks for public projects [person-reid-tiny-baseline](https://github.com/lulujianjie/person-reid-tiny-baseline) of [JackLu](https://github.com/lulujianjie)
 
 
 
