@@ -36,6 +36,7 @@ Get visualized reID results, the results're saved in "results" folder:
 python tool/get_vis_result.py
 ```
 The results is ranked (query|rank1|rank2|...) and retrieved images have a green border, negative images have a red border like:
+
 ![alt text](retrieved.png)
 
 ### ACKNOWLEDGEMENT
