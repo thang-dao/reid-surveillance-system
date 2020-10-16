@@ -40,7 +40,7 @@ The results is ranked (query|rank1|rank2|...) and retrieved images have a green 
 ![alt text](retrieved.png)
 
 ### ACKNOWLEDGEMENT
-Thanks for public projects [JackLu]'s (https://github.com/lulujianjie) [person-reid-tiny-baseline](https://github.com/lulujianjie/person-reid-tiny-baseline)
+Thanks for public projects [JackLu](https://github.com/lulujianjie)'s [person-reid-tiny-baseline](https://github.com/lulujianjie/person-reid-tiny-baseline)
 
 
 
