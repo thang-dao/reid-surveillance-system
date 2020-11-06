@@ -1,5 +1,6 @@
 # Re-identification in Surveillance System
-The reponsitory projects our thesis named "Re-identification in Surveillance System" and our paper "Multi-branch Network With Dynamically Matching Algorithm In Pre-identification" (Under review).
+Update: Our paper "Multi-branch Network With Dynamically Matching Algorithm In Re-identification", Thang V.Dao, Thang B.Dinh, Tien B.Dinh is accepted at [2020 7th NAFOSTED Conference on Information and Computer Science (NICS)](http://nafosted-nics.org/)
+The reponsitory projects our thesis named "Re-identification in Surveillance System" and our paper "Multi-branch Network With Dynamically Matching Algorithm In Re-identification".
 ![alt text](network.png)
 Multi-branch Network architecture. The features from the Iresnet-101 backbone is the input of three branches: Global branch, Local branch 1 and Local branch 2. All branches share weights from the backbone.
 ### Installation
